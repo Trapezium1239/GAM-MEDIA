@@ -4,15 +4,13 @@ import { NextResponse } from 'next/server';
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy':
     'camera=(), microphone=(), geolocation=(), payment=()',
-  'Cache-Control': 'no-store',
   'Strict-Transport-Security':
     'max-age=63072000; includeSubDomains; preload',
   'Content-Security-Policy':
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *.cloudinary.com *.supabase.co *.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.cloudinary.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *.cloudinary.com *.supabase.co *.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.cloudinary.com blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
 };
 
 export function addSecurityHeaders(response: NextResponse): NextResponse {

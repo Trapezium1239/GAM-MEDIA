@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { addSecurityHeaders } from '@/lib/security/headers';
+import { addSecurityHeaders, addPublicCachingHeaders } from '@/lib/security/headers';
 
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,6 +10,15 @@ export async function middleware(request: NextRequest) {
     return addSecurityHeaders(NextResponse.next({ request }));
   }
 
+  const path = request.nextUrl.pathname;
+  
+  // Public routes that don't need auth check - apply public caching
+  const isPublicRoute = path === '/' || path.startsWith('/sermons') || path.startsWith('/music') || 
+    path.startsWith('/programs') || path.startsWith('/giving') || path.startsWith('/gallery') ||
+    path.startsWith('/welcome') || path.startsWith('/devotional') || path.startsWith('/pastor') ||
+    path.startsWith('/roster') || path.startsWith('/projects') || path === '/login' ||
+    path === '/manifest.json' || path === '/sw.js' || path.startsWith('/api/');
+    
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(url, anon, {
@@ -27,13 +36,15 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
-  const isProtected =
-    path.startsWith('/admin') || path === '/dashboard' || path === '/profile';
+  // Only check auth for protected routes or when auth cookies exist
+  const hasAuthCookie = request.cookies.getAll().some(c => c.name.startsWith('sb-'));
+  const isProtected = path.startsWith('/admin') || path === '/dashboard' || path === '/profile' || path === '/app';
+  
+  let user = null;
+  if (hasAuthCookie || isProtected) {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
 
   if (!user && isProtected) {
     const redirectUrl = request.nextUrl.clone();
@@ -48,6 +59,11 @@ export async function middleware(request: NextRequest) {
     redirectUrl.pathname = '/app';
     const response = NextResponse.redirect(redirectUrl);
     return addSecurityHeaders(response);
+  }
+
+  // Apply public caching headers for public routes
+  if (isPublicRoute) {
+    return addPublicCachingHeaders(supabaseResponse);
   }
 
   return addSecurityHeaders(supabaseResponse);

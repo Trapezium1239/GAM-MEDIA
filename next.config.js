@@ -57,10 +57,6 @@ const securityHeaders = [
         value: 'DENY',
       },
       {
-        key: 'X-XSS-Protection',
-        value: '1; mode=block',
-      },
-      {
         key: 'Referrer-Policy',
         value: 'strict-origin-when-cross-origin',
       },
@@ -69,20 +65,21 @@ const securityHeaders = [
         value: 'camera=(), microphone=(), geolocation=(), payment=()',
       },
       {
-        key: 'Cache-Control',
-        value: 'no-store',
-      },
-      {
         key: 'Strict-Transport-Security',
         value: 'max-age=63072000; includeSubDomains; preload',
       },
       {
         key: 'Content-Security-Policy',
-        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *.cloudinary.com *.supabase.co *.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.cloudinary.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: *.cloudinary.com *.supabase.co *.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.cloudinary.com blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
       },
+    ],
+  },
+  {
+    source: '/',
+    headers: [
       {
-        key: 'X-Powered-By',
-        value: '',
+        key: 'Cache-Control',
+        value: 'public, max-age=0, stale-while-revalidate=60, stale-if-error=300',
       },
     ],
   },

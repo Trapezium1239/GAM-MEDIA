@@ -54,7 +54,7 @@ export default async function AppHomePage() {
           </Link>
           <div className="flex items-center gap-3">
             <Image
-              src="/logo.png"
+              src="/icon-192.png"
               alt="GAMI Logo"
               width={40}
               height={40}

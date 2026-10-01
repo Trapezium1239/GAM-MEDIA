@@ -4,7 +4,61 @@ import { Suspense } from 'react';
 import { PersistentPlayer } from '@/components/audio/persistent-player';
 import { SmartInstallBanner } from '@/components/pwa/smart-install-banner';
 
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Church',
+  name: 'Glorious Assembly Ministries International',
+  alternateName: 'GAMI',
+  url: 'https://gam.church',
+  logo: 'https://gam.church/icon-512.png',
+  image: 'https://gam.church/icon-512.png',
+  description: 'Community, Word, and Spiritual Growth — All in One Vault',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '',
+    addressLocality: '',
+    addressRegion: '',
+    postalCode: '',
+    addressCountry: 'NG',
+  },
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone: '',
+    contactType: 'customer service',
+    availableLanguage: 'English',
+  },
+  sameAs: [
+    'https://facebook.com/gami',
+    'https://youtube.com/@gami',
+    'https://instagram.com/gami',
+  ],
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: 'Sunday',
+      opens: '08:00',
+      closes: '12:30',
+      description: 'Celebration Services',
+    },
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: 'Wednesday',
+      opens: '18:00',
+      closes: '19:30',
+      description: 'Midweek Bible Study',
+    },
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: 'Friday',
+      opens: '19:00',
+      closes: '21:00',
+      description: 'Prayer Vigil',
+    },
+  ],
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL('https://gam.church'),
   title: {
     default: 'Glorious Assembly Ministries International',
     template: '%s | GAM App',
@@ -33,9 +87,9 @@ export const metadata: Metadata = {
     description: 'Community, Word, and Spiritual Growth — All in One Vault',
     images: [
       {
-        url: '/hero-loop.mp4',
-        width: 1200,
-        height: 630,
+        url: '/icon-512.png',
+        width: 512,
+        height: 512,
         alt: 'GAMI Church',
       },
     ],
@@ -44,7 +98,13 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Glorious Assembly Ministries International',
     description: 'Community, Word, and Spiritual Growth — All in One Vault',
-    images: ['/hero-loop.mp4'],
+    images: ['/icon-512.png'],
+  },
+  alternates: {
+    canonical: '/',
+  },
+  other: {
+    'script:ld+json': JSON.stringify(structuredData),
   },
 };
 
