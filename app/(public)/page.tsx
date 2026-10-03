@@ -4,7 +4,7 @@ import {
   BookOpen, Music, Calendar, Heart, Users, 
   Clock, MapPin, Download, Smartphone, 
   Play, ChevronRight, Globe, Building2,
-  Shield, WifiOff, Volume2
+  Shield, WifiOff, Volume2, Sunrise, MessageSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
@@ -37,6 +37,17 @@ interface MusicTrack {
   audio_url: string;
 }
 
+interface Devotional {
+  id: string;
+  date: string;
+  title: string;
+  scripture_reference: string;
+  scripture_text: string;
+  reflection: string;
+  prayer: string | null;
+  application_question: string | null;
+}
+
 async function getHomeData() {
   const supabase = await createClient();
   const { data: bundle } = await supabase.rpc('get_home_vault_bundle');
@@ -45,7 +56,10 @@ async function getHomeData() {
   const programs = ((bundle as any)?.programs || []) as Program[];
   const music = ((bundle as any)?.music || []) as MusicTrack[];
   
-  return { sermons, programs, music };
+  // Fetch today's devotional
+  const { data: devotional } = await supabase.rpc('get_todays_devotional');
+  
+  return { sermons, programs, music, devotional: devotional as Devotional | null };
 }
 
 export const metadata = {
@@ -57,7 +71,7 @@ export const metadata = {
 };
 
 export default async function LandingPage() {
-  const { sermons, programs, music } = await getHomeData();
+  const { sermons, programs, music, devotional } = await getHomeData();
   const latestSermons = sermons.slice(0, 3);
   const upcomingPrograms = programs.slice(0, 2);
   const featuredTrack = music[0];
@@ -68,6 +82,8 @@ export default async function LandingPage() {
     { icon: Calendar, title: 'Programs & Events', desc: 'Real-time church calendar with reminders and venue details', href: '/programs', color: 'green' },
     { icon: Heart, title: 'Giving & Seeds', desc: 'Direct account access for Tithes, Offerings, and Building Fund', href: '/giving', color: 'red' },
     { icon: Users, title: 'First-Timer Welcome', desc: 'Direct onboarding form for new visitors and prayer requests', href: '/welcome', color: 'emerald' },
+    { icon: Sunrise, title: 'Daily Devotional', desc: 'Daily Bible passage with reflection, prayer & application', href: '/devotional', color: 'orange' },
+    { icon: MessageSquare, title: 'Messages & Notes', desc: 'Pastoral messages, study notes & spiritual encouragement', href: '/sermons', color: 'violet' },
   ];
 
   const serviceTimes = [
@@ -149,6 +165,51 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* Today's Bible Passage — Prominent Card */}
+      {devotional && (
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-zinc-900/50 to-zinc-950 border border-amber-500/20 p-6 md:p-8">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <Sunrise className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-xs text-amber-400 font-medium uppercase tracking-wider">Today's Word</p>
+                <h2 className="text-2xl font-bold text-white">Daily Bible Passage</h2>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-zinc-300 font-medium italic">"{devotional.scripture_reference}"</p>
+              <p className="text-base text-zinc-100 leading-relaxed">"{devotional.scripture_text}"</p>
+              <div className="pt-4 border-t border-zinc-800/50">
+                <p className="text-sm text-zinc-300 leading-relaxed">{devotional.reflection}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-zinc-800/50">
+                <span className="text-xs text-zinc-500">
+                  <time dateTime={devotional.date}>{devotional.date ? format(new Date(devotional.date), 'EEEE, MMMM d, yyyy') : 'Today'}</time>
+                </span>
+                <div className="flex items-center gap-3">
+                  <Link 
+                    href="/devotional" 
+                    className="btn-accent text-sm"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Read Full Devotional
+                  </Link>
+                  <Link 
+                    href="/sermons" 
+                    className="btn-secondary text-sm"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Browse Messages
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Feature Grid */}
       <section>
         <div className="text-center mb-8">
@@ -164,6 +225,8 @@ export default async function LandingPage() {
               green: 'bg-green-500/10 text-green-400',
               red: 'bg-red-500/10 text-red-400',
               emerald: 'bg-emerald-500/10 text-emerald-400',
+              orange: 'bg-orange-500/10 text-orange-400',
+              violet: 'bg-violet-500/10 text-violet-400',
             };
             return (
               <Link 
@@ -284,6 +347,39 @@ export default async function LandingPage() {
                 <PlayMusicButton
                   track={{ id: featuredTrack.id, title: featuredTrack.title, artist: featuredTrack.artist_choir, audioUrl: featuredTrack.audio_url }}
                 />
+              </div>
+            )}
+
+            {devotional && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Sunrise className="w-5 h-5 text-amber-400" />
+                    Today's Devotional
+                  </h2>
+                  <Link href="/devotional" className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
+                    View All <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+                <article className="card space-y-3 p-5">
+                  <div className="flex items-center gap-2 text-xs text-amber-400">
+                    <Sunrise className="w-3.5 h-3.5" />
+                    <time dateTime={devotional.date}>{devotional.date ? format(new Date(devotional.date), 'EEEE, MMMM d, yyyy') : 'Today'}</time>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">{devotional.title}</h3>
+                  <p className="text-sm text-zinc-300 font-medium italic">"{devotional.scripture_reference}"</p>
+                  <p className="text-xs text-zinc-400 line-clamp-3">{devotional.scripture_text}</p>
+                  <p className="text-sm text-zinc-300 leading-relaxed line-clamp-4">{devotional.reflection}</p>
+                  {devotional.prayer && (
+                    <p className="text-sm text-zinc-400 italic border-t border-zinc-800 pt-3">{devotional.prayer}</p>
+                  )}
+                  <Link 
+                    href="/devotional" 
+                    className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1 inline-block mt-2"
+                  >
+                    Read Full Devotional <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </article>
               </div>
             )}
           </div>
