@@ -19,6 +19,8 @@ interface AudioState {
   stop: () => void;
   setCurrentTime: (time: number) => void;
   setDuration: (duration: number) => void;
+  seek: (time: number) => void;
+  seekRelative: (delta: number) => void;
   setOfflineAudioUrl: (id: string, url: string) => void;
 }
 
@@ -34,7 +36,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
         artist: track.artist,
-        album: 'ChurchVault Media Vault',
+        album: 'GAM Media Vault',
       });
     }
   },
@@ -42,6 +44,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   stop: () => set({ currentTrack: null, isPlaying: false, currentTime: 0, duration: 0 }),
   setCurrentTime: (time) => set({ currentTime: time }),
   setDuration: (duration) => set({ duration }),
+  seek: (time) => set({ currentTime: time }),
+  seekRelative: (delta) => set((state) => ({ currentTime: Math.max(0, Math.min(state.duration, state.currentTime + delta)) })),
   setOfflineAudioUrl: (id, url) => set((state) => {
     if (state.currentTrack?.id === id) {
       return { currentTrack: { ...state.currentTrack, offlineAudioUrl: url, audioUrl: url } };

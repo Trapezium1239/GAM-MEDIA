@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { LogOut, User, Users, Shield, ChevronRight } from 'lucide-react';
+import { LogOut, User, Users, Shield, ChevronRight, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function ProfilePage() {
@@ -86,6 +86,17 @@ export default async function ProfilePage() {
             <ChevronRight className="w-4 h-4 text-zinc-600" />
           </Link>
         )}
+
+        <Link
+          href="/privacy"
+          className="card-compact flex items-center gap-3 touch-manipulation text-left"
+        >
+          <span className="w-10 h-10 rounded-xl bg-zinc-800/10 flex items-center justify-center">
+            <FileText className="w-5 h-5 text-zinc-400" />
+          </span>
+          <span className="flex-1 text-sm font-medium text-white">Privacy Policy</span>
+          <ChevronRight className="w-4 h-4 text-zinc-600" />
+        </Link>
       </nav>
 
       <form action="/api/auth/signout" method="POST">

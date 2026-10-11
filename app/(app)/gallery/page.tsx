@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Image, Calendar, Tag } from 'lucide-react';
 import { format } from 'date-fns';
+import NextImage from 'next/image';
 
 interface GalleryItem {
   id: string;
@@ -30,11 +31,15 @@ export default async function GalleryPage() {
           {items.map((item) => (
             <article key={item.id} className="card-compact overflow-hidden group">
               <div className="aspect-[4/3] relative overflow-hidden rounded-t-xl">
-                <img
+                <NextImage
                   src={item.image_url}
                   alt={item.title || 'Gallery image'}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                   loading="lazy"
+                  placeholder="blur"
+                  blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
                 />
               </div>
               <div className="p-3 space-y-1">

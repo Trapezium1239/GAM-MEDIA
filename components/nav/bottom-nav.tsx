@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, Music, Calendar, User } from 'lucide-react';
+import { Home, BookOpen, Music, Calendar, User, Heart } from 'lucide-react';
 
 const navItems = [
   { href: '/app', label: 'Home', icon: Home },
   { href: '/sermons', label: 'Word', icon: BookOpen },
   { href: '/music', label: 'Music', icon: Music },
   { href: '/programs', label: 'Events', icon: Calendar },
+  { href: '/devotional', label: 'Daily Word', icon: BookOpen },
+  { href: '/giving', label: 'Giving', icon: Heart },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -19,15 +21,12 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/80 backdrop-blur-xl border-t border-zinc-800/50 pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-cream-100/80 backdrop-blur-xl border-t border-cream-300/50 pb-[env(safe-area-inset-bottom)]"
       aria-label="Primary navigation"
     >
       <div className="max-w-md mx-auto flex items-center justify-around h-16 px-2">
         {navItems.map((item, i) => {
-          const isActive =
-            item.href === '/app'
-              ? pathname === '/app'
-              : pathname.startsWith(item.href);
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
           return (
             <Link
@@ -35,8 +34,8 @@ export function BottomNav() {
               href={item.href}
               className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 touch-manipulation min-w-[56px] ${
                 isActive
-                  ? 'text-amber-400'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'text-wine-600'
+                  : 'text-cream-500 hover:text-wine-700'
               }`}
               aria-current={isActive ? 'page' : undefined}
               style={{ animationDelay: `${i * 60}ms` }}
@@ -45,8 +44,8 @@ export function BottomNav() {
               <span className="text-[10px] font-semibold tracking-wide">{item.label}</span>
               {isActive && (
                 <>
-                  <span className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-400" />
-                  <span className="absolute bottom-1 w-1 h-1 rounded-full bg-amber-400" />
+                  <span className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-wine-500 to-wine-600" />
+                  <span className="absolute bottom-1 w-1 h-1 rounded-full bg-wine-500" />
                 </>
               )}
             </Link>

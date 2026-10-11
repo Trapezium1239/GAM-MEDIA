@@ -2,7 +2,9 @@
 import { useAudioStore } from '@/store/use-audio-store';
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
-import { Music, Play, Pause } from 'lucide-react';
+import { Music, Play, Pause, Youtube, Search } from 'lucide-react';
+import { YouTubePlaylistEmbed } from '@/components/youtube/youtube-playlist-embed';
+import { UnifiedSearch } from '@/components/search/unified-search';
 
 interface MusicTrack {
   id: string;
@@ -34,6 +36,15 @@ export default function MusicPage() {
     }
   };
 
+  const searchItems = tracks.map(t => ({
+    id: t.id,
+    title: t.title,
+    artist_choir: t.artist_choir,
+    audio_url: t.audio_url,
+    release_date: t.release_date,
+    _type: 'music' as const,
+  }));
+
   if (loading) {
     return <div className="empty-state"><Music className="empty-state-icon" /><p className="empty-state-title">Loading music...</p></div>;
   }
@@ -41,44 +52,38 @@ export default function MusicPage() {
   return (
     <div className="space-y-6 py-4 pb-32">
       <header>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Music className="w-6 h-6 text-amber-400" />
+        <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
+          <Music className="w-6 h-6 text-wine-600" />
           Church Music
         </h1>
-        <p className="text-xs text-zinc-400 mt-1">Productions from our choir and worship teams</p>
+        <p className="text-xs text-wine-500 mt-1">Productions from our choir and worship teams</p>
       </header>
 
-      {tracks.length === 0 ? (
-        <div className="empty-state">
-          <Music className="empty-state-icon" />
-          <p className="empty-state-title">No music tracks uploaded yet</p>
+      <UnifiedSearch
+        initialResults={searchItems}
+        topics={[]}
+        type="music"
+        serverSearchEnabled
+        serverSearchThreshold={50}
+        onResultClick={(result) => handlePlay(tracks.find(t => t.id === result.id)!)}
+      />
+
+      {/* YouTube Music Playlist */}
+      <section className="mt-8 pt-8 border-t border-cream-300/50">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold text-wine-900 flex items-center justify-center gap-2">
+            <Youtube className="w-5 h-5 text-red-500" />
+            GAM Music on YouTube
+          </h2>
+          <p className="text-wine-500 text-sm">Stream our full worship playlist on YouTube Music</p>
         </div>
-      ) : (
-        <div className="space-y-2">
-          {tracks.map((track) => (
-            <button
-              key={track.id}
-              onClick={() => handlePlay(track)}
-              className="card-compact flex items-center gap-3 touch-manipulation text-left"
-            >
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                {currentTrack?.id === track.id && isPlaying ? (
-                  <Pause className="w-5 h-5 text-amber-400" />
-                ) : (
-                  <Play className="w-5 h-5 text-amber-400" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{track.title}</p>
-                <p className="text-xs text-zinc-400 truncate">{track.artist_choir}</p>
-              </div>
-              {track.lyrics && (
-                <span className="text-[10px] text-zinc-500 px-2 py-1 bg-zinc-800 rounded">Lyrics</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+        <YouTubePlaylistEmbed 
+          playlistId="PLEjZZqlkBhWs"
+          title="GAM Worship & Praise"
+          height={500}
+          autoplay={false}
+        />
+      </section>
     </div>
   );
 }

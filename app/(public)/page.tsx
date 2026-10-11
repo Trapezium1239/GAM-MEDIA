@@ -4,11 +4,15 @@ import {
   BookOpen, Music, Calendar, Heart, Users, 
   Clock, MapPin, Download, Smartphone, 
   Play, ChevronRight, Globe, Building2,
-  Shield, WifiOff, Volume2, Sunrise, MessageSquare
+  Shield, WifiOff, Volume2, Sunrise, MessageSquare,
+  Phone, Mail
 } from 'lucide-react';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { YouTubePlaylistEmbed } from '@/components/youtube/youtube-playlist-embed';
+import { BankDetailsSection } from '@/components/ui/bank-details-section';
+import { InstallButton } from '@/components/pwa/install-button';
 
 const PlaySermonButton = dynamic(() => import('@/components/audio/play-button').then((m) => ({ default: m.PlaySermonButton })));
 const PlayMusicButton = dynamic(() => import('@/components/audio/play-button').then((m) => ({ default: m.PlayMusicButton })));
@@ -63,7 +67,7 @@ async function getHomeData() {
 }
 
 export const metadata = {
-  title: 'Glorious Assembly Ministries International',
+  title: 'GLORIOUS ASSEMBLY MINISTRIES INTERNATIONAL',
   description: 'Community, Word, and Spiritual Growth — All in One Vault',
   alternates: {
     canonical: '/',
@@ -87,10 +91,14 @@ export default async function LandingPage() {
   ];
 
   const serviceTimes = [
-    { day: 'Sunday', time: '8:00 AM & 10:30 AM', label: 'Celebration Services', icon: Building2 },
-    { day: 'Wednesday', time: '6:00 PM', label: 'Midweek Bible Study', icon: BookOpen },
-    { day: 'Friday', time: '7:00 PM', label: 'Prayer Vigil', icon: Heart },
+    { day: 'Sunday', time: '9:30 AM', label: 'Celebration Service', icon: Building2, location: 'Main Auditorium', livestream: 'https://youtube.com/@T.H.S.ijaopo/live' },
+    { day: 'Tuesday', time: '5:30 PM', label: 'Midweek Bible Study', icon: BookOpen, location: 'Chapel Hall', livestream: 'https://youtube.com/@T.H.S.ijaopo/live' },
+    { day: 'Thursday', time: '5:30 PM', label: 'Prayer & Fellowship', icon: Heart, location: 'Prayer Room', livestream: 'https://youtube.com/@T.H.S.ijaopo/live' },
   ];
+
+  const churchAddress = 'Glorious Assembly Ministries, Behind Danax Omitowoju, Adamasingba, Ibadan, Oyo State, Nigeria';
+  const churchPhone = '+234 703 194 4460';
+  const churchEmail = 'info@gam.church'; // UPDATE: Add real email
 
   return (
     <div className="space-y-8 pb-32">
@@ -114,7 +122,7 @@ export default async function LandingPage() {
           <div className="mx-auto mb-6 relative">
             <Image
               src="/icon-192.png"
-              alt="Glorious Assembly Ministries International"
+              alt="GLORIOUS ASSEMBLY MINISTRIES INTERNATIONAL"
               width={120}
               height={120}
               className="mx-auto rounded-2xl shadow-2xl shadow-amber-500/30 ring-4 ring-amber-500/20"
@@ -123,7 +131,7 @@ export default async function LandingPage() {
             />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
-            Glorious Assembly Ministries International
+            GLORIOUS ASSEMBLY MINISTRIES INTERNATIONAL
           </h1>
           <p className="text-lg md:text-xl text-zinc-300 mb-8 max-w-2xl mx-auto leading-relaxed">
             Community, Word, and Spiritual Growth — All in One Vault
@@ -147,6 +155,7 @@ export default async function LandingPage() {
 
           {/* Dual CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <InstallButton variant="primary" className="w-full sm:w-auto" />
             <Link 
               href="/app" 
               className="btn-accent w-full sm:w-auto"
@@ -386,13 +395,27 @@ export default async function LandingPage() {
         </section>
       )}
 
+      {/* YouTube Music Playlist */}
+      <section>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">GAM Music on YouTube</h2>
+          <p className="text-zinc-400 text-sm">Stream our full worship playlist anytime, anywhere</p>
+        </div>
+        <YouTubePlaylistEmbed 
+          playlistId="PLEjZZqlkBhWs"
+          title="GAM Worship & Praise"
+          height={500}
+          autoplay={false}
+        />
+      </section>
+
       {/* Service Times & Location */}
       <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
           <Building2 className="w-5 h-5 text-amber-400" />
           Service Times & Fellowship
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {serviceTimes.map((service) => {
             const Icon = service.icon;
             return (
@@ -403,17 +426,79 @@ export default async function LandingPage() {
                 <h3 className="font-semibold text-white">{service.day}</h3>
                 <p className="text-sm text-amber-400 font-medium">{service.time}</p>
                 <p className="text-xs text-zinc-500 mt-1">{service.label}</p>
+                {service.location && (
+                  <p className="text-xs text-zinc-400 mt-1 flex items-center justify-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {service.location}
+                  </p>
+                )}
+                {service.livestream && (
+                  <a 
+                    href={service.livestream} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center justify-center gap-1 text-xs text-amber-400 hover:text-amber-300"
+                  >
+                    <Play className="w-3 h-3" />
+                    Watch Live
+                  </a>
+                )}
               </div>
             );
           })}
         </div>
-        <div className="mt-6 pt-6 border-t border-zinc-800/50 text-center">
-          <p className="text-sm text-zinc-400 flex items-center justify-center gap-2">
-            <Globe className="w-4 h-4" />
-            <span>Join us online or in person — all services streamed live</span>
+        <div className="bg-zinc-900/30 rounded-xl p-4 border border-zinc-800/50">
+          <h3 className="font-semibold text-white mb-3 flex items-center justify-center gap-2">
+            <MapPin className="w-4 h-4 text-amber-400" />
+            Find Us
+          </h3>
+          <p className="text-sm text-zinc-300 mb-4 text-center">{churchAddress}</p>
+          
+          {/* Google Maps Embed */}
+          <div className="relative rounded-xl overflow-hidden border border-cream-300/50 mb-4" style={{ aspectRatio: '16/9' }}>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.604860677069!2d3.8858823!3d7.3953746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10398d6b73ecef59%3A0x57b185bc39cc8849!2sGlorious%20Assembly%20Ministries%20Int%27l%20(Inc.)!5e0!3m2!1sen!2sng!4v1700000000000!5m2!1sen!2sng"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Glorious Assembly Ministries International Location"
+            />
+          </div>
+          
+          <p className="text-xs text-zinc-500 text-center mb-4">
+            9VWQ+46 Ibadan, Oyo State, Nigeria
+          </p>
+          
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-zinc-400">
+            <a href={`tel:${churchPhone}`} className="flex items-center gap-1 hover:text-amber-400 transition">
+              <Phone className="w-4 h-4" />
+              {churchPhone}
+            </a>
+            <a href={`mailto:${churchEmail}`} className="flex items-center gap-1 hover:text-amber-400 transition">
+              <Mail className="w-4 h-4" />
+              {churchEmail}
+            </a>
+            <a 
+              href="https://www.google.com/maps/place/Glorious+Assembly+Ministries+Int'l+(Inc.)/@7.3953632,3.8880763,16z/data=!4m6!3m5!1s0x10398d6b73ecef59:0x57b185bc39cc8849!8m2!3d7.3953746!4d3.888071!16s%2Fg%2F11hch_wqt1?entry=ttu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-amber-400 transition"
+            >
+              <MapPin className="w-4 h-4" />
+              Open in Maps
+            </a>
+          </div>
+          <p className="text-sm text-zinc-400 mt-4 text-center">
+            <Globe className="w-4 h-4 inline" />
+            Join us online or in person — all services streamed live
           </p>
         </div>
       </section>
+
+      <BankDetailsSection />
 
       {/* Install Callout */}
       <section className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-6 md:p-8">
@@ -455,20 +540,25 @@ export default async function LandingPage() {
       </section>
 
 {/* Footer */}
-<footer className="pt-8 pb-16 text-center">
-        <div className="flex items-center justify-center gap-6 mb-4">
-          <a href="https://facebook.com/gami" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-amber-400 transition" aria-label="Facebook">
+      <footer className="pt-8 pb-16 text-center">
+        <div className="flex items-center justify-center gap-6 mb-4 flex-wrap">
+          <a href="/privacy" className="text-zinc-500 hover:text-amber-400 transition text-xs">Privacy Policy</a>
+          <span className="text-zinc-700 mx-2">|</span>
+          <a href="https://www.facebook.com/TheYESofGOD" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-amber-400 transition" aria-label="Facebook">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
           </a>
-          <a href="https://youtube.com/@gami" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-amber-400 transition" aria-label="YouTube">
+          <a href="https://www.youtube.com/@T.H.S.ijaopo" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-amber-400 transition" aria-label="YouTube">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.166 3.166 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.166 3.166 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.166 3.166 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.166 3.166 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
           </a>
-          <a href="https://instagram.com/gami" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-amber-400 transition" aria-label="Instagram">
+          <a href="https://www.instagram.com/_gamhq/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-amber-400 transition" aria-label="Instagram">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-.128-.058-.166-.07-.298-.07-3.31 0-3.755-.015-5.057.071zM12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+          </a>
+          <a href="https://wa.me/2347031944460" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-green-400 transition" aria-label="WhatsApp">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.521-.075-.148-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 2.954.149.078 2.096 3.2 4.997 4.487.092.042.195.055.289.05.099 0 .2-.015.3-.048.098-.033.221-.126.35-.32.245-.32.347-.542.446-.788.099-.248.05-.458.025-.647-.025-.198-.025-.371-.025-.52-.892-.579-1.529-1.642-1.916-2.077-.38-.435-.38-.45-.38-.525 0-.074.13-.24.297-.744.173-.499.173-1.579 1.423-2.496.56-.412 1.12-.613 1.47-.7.525-.132.967-.132 1.463-.132.33 0 .688.058.918.15.23.1.436.272.626.472.19.198.371.435.551.72.248.39.45.727.548 1.087.098.36.098.743.098 1.022 0 .41-.098.677-.221.826-.123.148-.404.528-.747 1.087-.583.95-1.69 2.108-1.69 3.287 0 .678.24 1.258.434 1.59.135.232.297.488.488.792.19.303.334.572.487.88.15.303.224.55.297.827.073.273.11.517.149.79.038.273.005.52-.025.712-.025.222-.024.52-.048.867-.098 1.132-.42 1.905-1.312 2.57-1.87 1.3-.527 1.89-.67 2.135-.688.147 0 .272.03.424.18.175.178.27.4.247.642-.028.245-.15.6-.312.94-.172.368-.357.86-.357 1.405 0 1.13.45 1.813 1.048 2.317.602.505 1.132 1.04 1.427 1.57.296.524.458 1.16.458 1.82 0 .298-.046.67-.172 1.05-.058.173-.157.298-.27.417-.12.12-.282.188-.52.222-.233.034-.513.074-.84.132-.32.055-.666.08-.99.108-.31.025-.61-.055-.86-.252-.25-.197-.47-.468-.67-.752-.197-.282-.344-.508-.487-.703-.133-.197-.233-.347-.36-.46-.126-.11-.263-.197-.435-.26-.173-.06-.36-.09-.57-.13-.224-.04-.478-.045-.753-.045-.272 0-.55.06-.813.17-.26.11-.553.26-.84.47-.29.21-.566.452-.826.717-.26.265-.49.56-.71.887-.22.326-.44.633-.66.926-.22.29-.42.55-.636.778-.216.226-.42.42-.636.575-.216.15-.433.22-.65.22-.22 0-.44-.08-.66-.22-.22-.14-.42-.3-.595-.46-.175-.16-.33-.304-.49-.45-.15-.15-.27-.283-.378-.403-.108-.12-.2-.233-.278-.338-.077-.105-.14-.2-.2-.3-.06-.1-.11-.198-.15-.297-.038-.098-.06-.197-.08-.296-.02-.098-.03-.197-.03-.296 0-.1 0-.197.03-.296.02-.1.04-.198.06-.297.04-.1.09-.197.15-.297.19-.22.405-.42.64-.626.235-.206.48-.403.735-.596.255-.193.51-.37.766-.543.256-.173.51-.33.766-.48.256-.15.51-.29.766-.42.256-.13.51-.25.766-.37.256-.11.51-.22.766-.33.256-.09.51-.19.766-.3.256-.07.51-.15.766-.26.256-.05.51-.1.766-.22.256-.03.51-.06.766-.18.256-.01.51-.02.766-.02.256 0 .51.02.766.02.256.02.51.06.766.18.256.04.51.1.766.22.256.06.51.15.766.26.256.07.51.15.766.26.256.09.51.19.766.3.256.11.51.22.766.33.256.13.51.25.766.37.256.15.51.29.766.42.256.173.51.33.766.48.256.193.51.37.766.543.256.173.51.33.766.48.256.15.51.29.766.42.256.13.51.25.766.37.256.11.51.22.766.33.256.09.51.19.766.3.256.07.51.15.766.26.256.05.51.1.766.22.256.03.51.06.766.18.256.01.51.02.766.02.256.01.51.02.766.02"/></svg>
           </a>
         </div>
         <p className="text-xs text-zinc-600">
-          Glorious Assembly Ministries International &copy; {new Date().getFullYear()}
+          GLORIOUS ASSEMBLY MINISTRIES INTERNATIONAL &copy; {new Date().getFullYear()}
         </p>
         <p className="text-xs text-zinc-600 mt-1">
           GAM App — Built for the community, by the community

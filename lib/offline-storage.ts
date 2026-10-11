@@ -1,129 +1,148 @@
-import { get, set, del, keys } from 'idb-keyval';
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 
-const AUDIO_PREFIX = 'audio_';
-const VAULT_PREFIX = 'vault_';
-const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB
-const MAX_TOTAL_SIZE = 200 * 1024 * 1024; // 200MB
-
-export interface CachedAudio {
+interface AudioCacheEntry {
   id: string;
-  title: string;
-  artist: string;
   blob: Blob;
-  mimeType: string;
-  cachedAt: number;
-  size: number;
+  metadata: { title: string; artist: string; mimeType: string; cachedAt: number; size: number };
 }
 
-export interface VaultItem {
+interface VaultCacheEntry {
   id: string;
   type: 'sermon' | 'music' | 'program';
   data: unknown;
   cachedAt: number;
 }
 
+interface OfflineStorageDB extends DBSchema {
+  audioCache: {
+    key: string;
+    value: AudioCacheEntry;
+    indexes: { 'by-cached-at': number; 'by-size': number };
+  };
+  vaultCache: {
+    key: string;
+    value: VaultCacheEntry;
+    indexes: { 'by-cached-at': number };
+  };
+}
+
+const MAX_STORAGE_BYTES = 200 * 1024 * 1024; // 200MB
+const TARGET_STORAGE_BYTES = 150 * 1024 * 1024; // 150MB after eviction
+const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB per file
+
+let dbPromise: Promise<IDBPDatabase<OfflineStorageDB>> | null = null;
+
+function getDB() {
+  if (!dbPromise) {
+    dbPromise = openDB<OfflineStorageDB>('gam-offline-cache', 1, {
+      upgrade(db) {
+        const audioStore = db.createObjectStore('audioCache', { keyPath: 'id' });
+        audioStore.createIndex('by-cached-at', 'metadata.cachedAt');
+        audioStore.createIndex('by-size', 'metadata.size');
+
+        const vaultStore = db.createObjectStore('vaultCache', { keyPath: 'id' });
+        vaultStore.createIndex('by-cached-at', 'cachedAt');
+      },
+    });
+  }
+  return dbPromise;
+}
+
 /**
- * Cache an audio blob for offline playback
+ * Cache an audio blob for offline playback with LRU eviction
  */
 export async function cacheAudio(
   id: string,
   blob: Blob,
   metadata: { title: string; artist: string; mimeType: string }
-): Promise<void> {
+): Promise<string> {
   if (blob.size > MAX_AUDIO_SIZE) {
     throw new Error(`Audio file exceeds ${MAX_AUDIO_SIZE / 1024 / 1024}MB limit`);
   }
 
-  const totalSize = await getTotalCacheSize();
-  if (totalSize + blob.size > MAX_TOTAL_SIZE) {
-    await evictOldestAudio(blob.size);
-  }
+  const db = await getDB();
+  await enforceQuota(db, blob.size);
 
-  const item: CachedAudio = {
+  const entry: AudioCacheEntry = {
     id,
-    ...metadata,
     blob,
-    cachedAt: Date.now(),
-    size: blob.size,
+    metadata: { ...metadata, cachedAt: Date.now(), size: blob.size },
   };
 
-  await set(`${AUDIO_PREFIX}${id}`, item);
+  await db.put('audioCache', entry);
+  return URL.createObjectURL(blob);
 }
 
 /**
- * Retrieve cached audio blob
+ * Retrieve cached audio blob and update access time (LRU)
  */
-export async function getCachedAudio(id: string): Promise<CachedAudio | undefined> {
-  return await get(`${AUDIO_PREFIX}${id}`);
+export async function getCachedAudio(id: string): Promise<{ objectUrl: string; entry: AudioCacheEntry } | null> {
+  const db = await getDB();
+  const entry = await db.get('audioCache', id);
+  if (!entry) return null;
+
+  // Update access time for LRU
+  entry.metadata.cachedAt = Date.now();
+  await db.put('audioCache', entry);
+
+  return { objectUrl: URL.createObjectURL(entry.blob), entry };
 }
 
 /**
  * Check if audio is cached
  */
 export async function isAudioCached(id: string): Promise<boolean> {
-  const item = await get(`${AUDIO_PREFIX}${id}`);
-  return !!item;
+  const db = await getDB();
+  return (await db.get('audioCache', id)) !== null;
 }
 
 /**
  * Remove cached audio
  */
 export async function removeCachedAudio(id: string): Promise<void> {
-  await del(`${AUDIO_PREFIX}${id}`);
+  const db = await getDB();
+  const entry = await db.get('audioCache', id);
+  if (entry) {
+    URL.revokeObjectURL(URL.createObjectURL(entry.blob));
+  }
+  await db.delete('audioCache', id);
 }
 
 /**
  * Get all cached audio IDs
  */
 export async function getCachedAudioIds(): Promise<string[]> {
-  const allKeys = await keys() as string[];
-  return allKeys
-    .filter((k: string) => k.startsWith(AUDIO_PREFIX))
-    .map((k: string) => k.replace(AUDIO_PREFIX, ''));
+  const db = await getDB();
+  const entries = await db.getAllKeys('audioCache');
+  return entries as string[];
 }
 
 /**
  * Get total cache size in bytes
  */
 export async function getTotalCacheSize(): Promise<number> {
-  const allKeys = (await keys()).filter((k): k is string => typeof k === 'string');
-  let total = 0;
-  for (const key of allKeys) {
-    if (key.startsWith(AUDIO_PREFIX)) {
-      const item = await get(key);
-      if (item && 'size' in item) total += (item as CachedAudio).size;
-    }
-  }
-  return total;
+  const db = await getDB();
+  const entries = await db.getAll('audioCache');
+  return entries.reduce((sum, e) => sum + e.metadata.size, 0);
 }
 
 /**
- * Evict oldest audio until enough space freed
+ * Enforce storage quota with LRU eviction
  */
-async function evictOldestAudio(requiredSpace: number): Promise<void> {
-  const allKeys = (await keys()).filter((k): k is string => typeof k === 'string');
-  const audioItems: { key: string; cachedAt: number; size: number }[] = [];
+async function enforceQuota(db: IDBPDatabase<OfflineStorageDB>, incomingSize: number): Promise<void> {
+  let currentSize = 0;
+  const entries = await db.getAllFromIndex('audioCache', 'by-size');
+  currentSize = entries.reduce((sum, e) => sum + e.metadata.size, 0);
 
-  for (const key of allKeys) {
-    if (key.startsWith(AUDIO_PREFIX)) {
-      const item = await get(key);
-      if (item && 'cachedAt' in item && 'size' in item) {
-        audioItems.push({
-          key,
-          cachedAt: (item as CachedAudio).cachedAt,
-          size: (item as CachedAudio).size,
-        });
-      }
-    }
-  }
+  if (currentSize + incomingSize <= MAX_STORAGE_BYTES) return;
 
-  audioItems.sort((a, b) => a.cachedAt - b.cachedAt);
-
-  let freed = 0;
-  for (const item of audioItems) {
-    if (freed >= requiredSpace) break;
-    await del(item.key);
-    freed += item.size;
+  // Evict LRU until under target
+  const lruEntries = await db.getAllFromIndex('audioCache', 'by-cached-at');
+  for (const entry of lruEntries) {
+    if (currentSize <= TARGET_STORAGE_BYTES) break;
+    await db.delete('audioCache', entry.id);
+    currentSize -= entry.metadata.size;
+    URL.revokeObjectURL(URL.createObjectURL(entry.blob));
   }
 }
 
@@ -131,44 +150,37 @@ async function evictOldestAudio(requiredSpace: number): Promise<void> {
  * Clear all cached audio
  */
 export async function clearAudioCache(): Promise<void> {
-  const allKeys = (await keys()).filter((k): k is string => typeof k === 'string');
-  const audioKeys = allKeys.filter((k) => k.startsWith(AUDIO_PREFIX));
-  await Promise.all(audioKeys.map((k) => del(k)));
+  const db = await getDB();
+  const entries = await db.getAll('audioCache');
+  for (const entry of entries) {
+    URL.revokeObjectURL(URL.createObjectURL(entry.blob));
+  }
+  await db.clear('audioCache');
 }
 
 /**
- * Vault storage for sermon/music/program data (metadata, not blobs)
+ * Vault storage for sermon/music/program metadata
  */
-export async function cacheVaultItem(id: string, type: VaultItem['type'], data: unknown): Promise<void> {
-  const item: VaultItem = {
-    id,
-    type,
-    data,
-    cachedAt: Date.now(),
-  };
-  await set(`${VAULT_PREFIX}${id}`, item);
+export async function cacheVaultItem(id: string, type: VaultCacheEntry['type'], data: unknown): Promise<void> {
+  const db = await getDB();
+  const entry: VaultCacheEntry = { id, type, data, cachedAt: Date.now() };
+  await db.put('vaultCache', entry);
 }
 
-export async function getVaultItem(id: string): Promise<VaultItem | undefined> {
-  return await get(`${VAULT_PREFIX}${id}`);
+export async function getVaultItem(id: string): Promise<VaultCacheEntry | null> {
+  const db = await getDB();
+  const entry = await db.get('vaultCache', id);
+  return entry ?? null;
 }
 
-export async function getAllVaultItems(): Promise<VaultItem[]> {
-  const allKeys = (await keys()).filter((k): k is string => typeof k === 'string');
-  const items: VaultItem[] = [];
-  for (const key of allKeys) {
-    if (key.startsWith(VAULT_PREFIX)) {
-      const item = await get(key);
-      if (item) items.push(item as VaultItem);
-    }
-  }
-  return items;
+export async function getAllVaultItems(): Promise<VaultCacheEntry[]> {
+  const db = await getDB();
+  return await db.getAll('vaultCache');
 }
 
 export async function clearVaultCache(): Promise<void> {
-  const allKeys = (await keys()).filter((k): k is string => typeof k === 'string');
-  const vaultKeys = allKeys.filter((k) => k.startsWith(VAULT_PREFIX));
-  await Promise.all(vaultKeys.map((k) => del(k)));
+  const db = await getDB();
+  await db.clear('vaultCache');
 }
 
 /**
@@ -179,20 +191,15 @@ export async function getStorageStats(): Promise<{
   audioSize: number;
   vaultCount: number;
 }> {
-  const allKeys = (await keys()).filter((k): k is string => typeof k === 'string');
-  let audioCount = 0;
-  let audioSize = 0;
-  let vaultCount = 0;
+  const db = await getDB();
+  const [audioEntries, vaultEntries] = await Promise.all([
+    db.getAll('audioCache'),
+    db.getAll('vaultCache'),
+  ]);
 
-  for (const key of allKeys) {
-    if (key.startsWith(AUDIO_PREFIX)) {
-      audioCount++;
-      const item = await get(key);
-      if (item && 'size' in item) audioSize += (item as CachedAudio).size;
-    } else if (key.startsWith(VAULT_PREFIX)) {
-      vaultCount++;
-    }
-  }
-
-  return { audioCount, audioSize, vaultCount };
+  return {
+    audioCount: audioEntries.length,
+    audioSize: audioEntries.reduce((sum, e) => sum + e.metadata.size, 0),
+    vaultCount: vaultEntries.length,
+  };
 }

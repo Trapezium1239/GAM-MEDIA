@@ -1,4 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { createClient } from '@/lib/supabase/client';
 import { format } from 'date-fns';
 import { Calendar, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react';
 import Link from 'next/link';

@@ -62,7 +62,7 @@ export default async function AppHomePage() {
               unoptimized
             />
             <div>
-              <h1 className="text-2xl font-bold text-gradient tracking-tight">Glorious Assembly Ministries International</h1>
+              <h1 className="text-2xl font-bold text-gradient tracking-tight">GLORIOUS ASSEMBLY MINISTRIES INTERNATIONAL</h1>
               <p className="text-xs text-zinc-500 flex items-center gap-1.5">
                 <span className="w-1 h-1 rounded-full bg-amber-400" />
                 GAM App

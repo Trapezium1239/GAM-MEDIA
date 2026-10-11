@@ -11,7 +11,15 @@ interface PlayTrackData {
   audioUrl: string;
 }
 
-export function PlaySermonButton({ track }: { track: PlayTrackData }) {
+export function PlaySermonButton({ 
+  track, 
+  className = '',
+  dataPlayBtn = false
+}: { 
+  track: PlayTrackData;
+  className?: string;
+  dataPlayBtn?: boolean;
+}) {
   const { currentTrack, isPlaying, playTrack, togglePlay, setOfflineAudioUrl } = useAudioStore();
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
@@ -60,8 +68,9 @@ export function PlaySermonButton({ track }: { track: PlayTrackData }) {
       <div className="flex items-center gap-2">
         <button
           onClick={handleClick}
-          className="flex-1 py-2 text-xs font-medium text-zinc-100 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition touch-manipulation flex items-center justify-center gap-1.5"
+          className={`flex-1 py-2 text-xs font-medium text-zinc-100 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition touch-manipulation flex items-center justify-center gap-1.5 ${className}`}
           aria-label={isThisPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
+          {...(dataPlayBtn && { 'data-play-btn': true })}
         >
           {isThisPlaying ? (
             <>
@@ -84,8 +93,9 @@ export function PlaySermonButton({ track }: { track: PlayTrackData }) {
     <div className="flex items-center gap-2">
       <button
         onClick={handleClick}
-        className="flex-1 py-2 text-xs font-medium text-zinc-100 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition touch-manipulation flex items-center justify-center gap-1.5"
+        className={`flex-1 py-2 text-xs font-medium text-zinc-100 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition touch-manipulation flex items-center justify-center gap-1.5 ${className}`}
         aria-label={isThisPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
+        {...(dataPlayBtn && { 'data-play-btn': true })}
       >
         {isThisPlaying ? (
           <>

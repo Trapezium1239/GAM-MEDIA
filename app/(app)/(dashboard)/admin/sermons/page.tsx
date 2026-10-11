@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Plus, BookOpen } from 'lucide-react';
+import Link from 'next/link';
+import { Loader2, Plus, BookOpen, Upload } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AdminSermonsPage() {
@@ -57,11 +58,15 @@ export default function AdminSermonsPage() {
 
   return (
     <div className="space-y-6 py-4">
-      <header>
+      <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           <BookOpen className="w-6 h-6 text-blue-400" />
           Add Sermon
         </h1>
+        <Link href="/admin/sermons/bulk" className="btn-secondary inline-flex items-center gap-2">
+          <Upload className="w-4 h-4" />
+          Bulk Import
+        </Link>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-4 p-5 rounded-2xl bg-zinc-900 border border-zinc-800">

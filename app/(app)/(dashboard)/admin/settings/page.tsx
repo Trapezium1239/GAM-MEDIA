@@ -160,7 +160,7 @@ export default function AdminSettingsPage() {
             id="d-meta"
             value={extraMeta}
             onChange={(e) => setExtraMeta(e.target.value)}
-            placeholder={category === 'bank_account' ? 'Account name: Grace Assembly' : 'Additional details'}
+            placeholder={category === 'bank_account' ? 'Account name: GLORIOUS ASSEMBLY MINISTRIES' : 'Additional details'}
             className="input-base"
           />
         </div>

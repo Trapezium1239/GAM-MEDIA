@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run typecheck
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+
+  build:
+    name: Build (Webpack)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+  design-compliance:
+    name: Design Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      # Fail on forbidden patterns
+      - name: Check for gradients on primitives
+        run: |
+          if grep -r "bg-gradient-to" --include="*.tsx" --include="*.ts" app/ components/ | grep -v "node_modules" | grep -v ".next"; then
+            echo "❌ Gradient found on UI primitive. Use solid colors only."
+            exit 1
+          fi
+      - name: Check for emojis in UI
+        run: |
+          if grep -r "😀\|😃\|😄\|😁\|😆\|😅\|😂\|🤣\|😊\|😇\|🙂\|🙃\|😉\|😌\|😍\|🥰\|😘\|😗\|😙\|😚\|😋\|😛\|😝\|😜\|🤪\|🤨\|🧐\|🤓\|😎\|🤩\|🥳\|😏\|😒\|😞\|😔\|😟\|😕\|🙁\|☹️\|😣\|😖\|😫\|😩\|🥺\|😢\|😭\|😤\|😠\|😡\|🤬\|🤯\|😳\|🥵\|🥶\|😱\|😨\|😰\|😥\|😓\|🤗\|🤔\|🤭\|🤫\|🤥\|😶\|😐\|😑\|😬\|🙄\|😯\|😦\|😧\|😮\|😲\|😴\|🤤\|😪\|😵\|🤐\|🥴\|🤢\|🤮\|🤧\|😷\|🤒\|🤕\|🤑\|🤠\|😈\|👿\|👹\|👺\|🤡\|💩\|👻\|💀\|☠️\|👽\|👾\|🤖\|🎃\|😺\|😸\|😹\|😻\|😼\|😽\|🙀\|😿\|😾\|🙌\|👏\|👋\|🤝\|👍\|👎\|👊\|✊\|🤛\|🤜\|🤞\|✌️\|🤟\|🤘\|🤙\|👈\|👉\|👆\|👇\|☝️\|👌\|✊\|🤚\|🖐\|🖖\|👋\|🤷\|🤦\|🤦‍♂️\|🤦‍♀️\|🙍\|🙍‍♂️\|🙍‍♀️\|🙎\|🙎‍♂️\|🙎‍♀️\|🙅\|🙅‍♂️\|🙅‍♀️\|🙆\|🙆‍♂️\|🙆‍♀️\|💁\|💁‍♂️\|💁‍♀️\|🙋\|🙋‍♂️\|🙋‍♀️\|🙇\|🙇‍♂️\|🙇‍♀️\|🤦\|🤦‍♂️\|🤦‍♀️\|🤷\|🤷‍♂️\|🤷‍♀️\|🙅\|🙅‍♂️\|🙅‍♀️\|🙆\|🙆‍♂️\|🙆‍♀️\|💁\|💁‍♂️\|💁‍♀️\|🙋\|🙋‍♂️\|🙋‍♀️\|🙇\|🙇‍♂️\|🙇‍♀️\|🤦\|🤦‍♂️\|🤦‍♀️\|🤷\|🤷‍♂️\|🤷‍♀️" --include="*.tsx" --include="*.ts" app/ components/ | grep -v "node_modules" | grep -v ".next"; then
+            echo "❌ Emoji found in UI code. Use Lucide icons only."
+            exit 1
+          fi
+      - name: Check for nested cards > 2 levels
+        run: |
+          # Simple heuristic: count "card" class occurrences in a single component
+          if grep -r "className.*card.*card" --include="*.tsx" app/ components/ | grep -v "node_modules" | grep -v ".next" | head -5; then
+            echo "⚠️ Potential nested cards detected. Review manually."
+          fi
+      - name: Check for console.log in source
+        run: |
+          if grep -r "console\.log" --include="*.tsx" --include="*.ts" app/ components/ lib/ store/ scripts/ | grep -v "node_modules" | grep -v ".next"; then
+            echo "❌ console.log found in source. Remove or use logger."
+            exit 1
+          fi
+      - name: Check for TODO/FIXME without issue
+        run: |
+          if grep -r "TODO\|FIXME" --include="*.tsx" --include="*.ts" app/ components/ lib/ store/ scripts/ | grep -v "node_modules" | grep -v ".next" | grep -v "DESIGN.md" | grep -v "#[0-9]"; then
+            echo "❌ TODO/FIXME without GitHub issue reference found."
+            exit 1
+          fi
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - name: Check for forbidden packages
+        run: |
+          FORBIDDEN="framer-motion @emotion/react @emotion/styled styled-components @mui/material @mui/icons-material antd react-bootstrap bootstrap reactstrap chakra-ui @chakra-ui/react tailwindui headlessui @headlessui/react react-hook-form formik yup zod react-query @tanstack/react-query swr axios ky got superagent unfetch isomorphic-unfetch date-fns-tz moment moment-timezone luxon datepicker react-datepicker react-select downshift react-autosuggest react-virtualized react-window react-table react-grid-layout react-dnd react-beautiful-dnd react-spring react-motion react-transition-group animate.css"
+          for pkg in $FORBIDDEN; do
+            if npm list "$pkg" 2>/dev/null | grep -q "$pkg"; then
+              echo "❌ Forbidden package detected: $pkg"
+              exit 1
+            fi
+          done
+          echo "✅ No forbidden packages found."
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
