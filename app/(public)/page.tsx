@@ -90,6 +90,16 @@ export default async function LandingPage() {
     { icon: MessageSquare, title: 'Messages & Notes', desc: 'Pastoral messages, study notes & spiritual encouragement', href: '/sermons', color: 'violet' },
   ];
 
+  const featureCardColors = {
+    blue: { bg: 'bg-blue-50', border: 'border-blue-200', icon: 'bg-blue-50 border-blue-200 text-blue-600', title: 'text-slate-900', desc: 'text-slate-700', link: 'text-blue-700 hover:text-blue-800' },
+    amber: { bg: 'bg-amber-50', border: 'border-amber-200', icon: 'bg-amber-50 border-amber-200 text-amber-600', title: 'text-slate-900', desc: 'text-slate-700', link: 'text-amber-700 hover:text-amber-800' },
+    green: { bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'bg-emerald-50 border-emerald-200 text-emerald-600', title: 'text-slate-900', desc: 'text-slate-700', link: 'text-emerald-700 hover:text-emerald-800' },
+    red: { bg: 'bg-rose-50', border: 'border-rose-200', icon: 'bg-rose-50 border-rose-200 text-rose-600', title: 'text-slate-900', desc: 'text-slate-700', link: 'text-rose-700 hover:text-rose-800' },
+    emerald: { bg: 'bg-teal-50', border: 'border-teal-200', icon: 'bg-teal-50 border-teal-200 text-teal-600', title: 'text-slate-900', desc: 'text-slate-700', link: 'text-teal-700 hover:text-teal-800' },
+    orange: { bg: 'bg-orange-50', border: 'border-orange-200', icon: 'bg-orange-50 border-orange-200 text-orange-600', title: 'text-slate-900', desc: 'text-slate-700', link: 'text-orange-700 hover:text-orange-800' },
+    violet: { bg: 'bg-purple-50', border: 'border-purple-200', icon: 'bg-purple-50 border-purple-200 text-purple-600', title: 'text-slate-900', desc: 'text-slate-700', link: 'text-purple-700 hover:text-purple-800' },
+  };
+
   const serviceTimes = [
     { day: 'Sunday', time: '9:30 AM', label: 'Celebration Service', icon: Building2, location: 'Main Auditorium', livestream: 'https://youtube.com/@T.H.S.ijaopo/live' },
     { day: 'Tuesday', time: '5:30 PM', label: 'Midweek Bible Study', icon: BookOpen, location: 'Chapel Hall', livestream: 'https://youtube.com/@T.H.S.ijaopo/live' },
@@ -220,41 +230,47 @@ export default async function LandingPage() {
       )}
 
       {/* Feature Grid */}
-      <section>
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">What&apos;s Inside GAM App</h2>
-          <p className="text-zinc-400 text-sm">Everything you need for your spiritual journey, in one place</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {features.map((feature, i) => {
-            const Icon = feature.icon;
-            const colorClasses = {
-              blue: 'bg-blue-500/10 text-blue-400',
-              amber: 'bg-amber-500/10 text-amber-400',
-              green: 'bg-green-500/10 text-green-400',
-              red: 'bg-red-500/10 text-red-400',
-              emerald: 'bg-emerald-500/10 text-emerald-400',
-              orange: 'bg-orange-500/10 text-orange-400',
-              violet: 'bg-violet-500/10 text-violet-400',
-            };
-            return (
-              <Link 
-                key={feature.title} 
-                href={feature.href}
-                className="card-interactive group h-full flex flex-col"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${colorClasses[feature.color as keyof typeof colorClasses]}`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-white mb-1 group-hover:text-amber-400 transition-colors">{feature.title}</h3>
-                <p className="text-xs text-zinc-500 flex-1">{feature.desc}</p>
-                <span className="text-xs font-medium text-amber-400 flex items-center gap-1 mt-2 group-hover:gap-2 transition-all">
-                  Explore <ChevronRight className="w-3 h-3" />
-                </span>
-              </Link>
-            );
-          })}
+      <section className="w-full py-12 px-4 bg-slate-950">
+        <div className="max-w-6xl mx-auto">
+          {/* Section Header */}
+          <p className="text-center text-zinc-400 text-sm sm:text-base mb-10">
+            Everything you need for your spiritual journey, in one place
+          </p>
+
+          {/* Balanced Responsive Grid (3 Columns Max for 7 items) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
+            {features.map((feature, index) => {
+              const colors = featureCardColors[feature.color as keyof typeof featureCardColors];
+              const isLastCardAlone = index === 6;
+              const Icon = feature.icon;
+              return (
+                <Link
+                  key={feature.title}
+                  href={feature.href}
+                  className={`bg-white text-slate-900 rounded-2xl p-6 flex flex-col justify-between shadow-md border border-slate-300 transition-all hover:shadow-lg ${isLastCardAlone ? "lg:col-start-2" : ""}`}
+                  style={{ animationDelay: `${index * 80}ms` }}
+                >
+                  <div>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 border ${colors.icon}`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className={`text-lg font-bold mb-2 ${colors.title}`}>
+                      {feature.title}
+                    </h3>
+                    <p className={`text-sm leading-relaxed mb-6 ${colors.desc}`}>
+                      {feature.desc}
+                    </p>
+                  </div>
+                  <a
+                    href={feature.href}
+                    className={`inline-flex items-center text-sm font-semibold transition-colors ${colors.link}`}
+                  >
+                    Explore <span className="ml-1">›</span>
+                  </a>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -265,36 +281,36 @@ export default async function LandingPage() {
           {latestSermons.length > 0 && (
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-amber-400" />
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-blue-600" />
                   Latest from the Word Vault
                 </h2>
-                <Link href="/sermons" className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
+                <Link href="/sermons" className="text-sm text-blue-700 hover:text-blue-800 font-medium flex items-center gap-1">
                   View All <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
               <div className="space-y-3">
                 {latestSermons.map((sermon) => (
-                  <article key={sermon.id} className="card space-y-3">
+                  <article key={sermon.id} className="bg-white text-slate-900 rounded-2xl p-5 shadow-md border border-slate-300 transition-all hover:shadow-lg space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                        <Volume2 className="w-6 h-6 text-amber-400" />
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
+                        <Volume2 className="w-6 h-6 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-semibold text-white truncate">{sermon.title}</h3>
-                        <p className="text-sm text-zinc-400">
+                        <h3 className="text-base font-semibold text-slate-900 truncate">{sermon.title}</h3>
+                        <p className="text-sm text-slate-600">
                           {sermon.preacher} • {format(new Date(sermon.date), 'MMMM d, yyyy')}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 pt-2 border-t border-zinc-800/60">
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
                       {sermon.audio_url && (
                         <PlaySermonButton
                           track={{ id: sermon.id, title: sermon.title, artist: sermon.preacher, audioUrl: sermon.audio_url }}
                         />
                       )}
                       {sermon.video_link && (
-                        <a href={sermon.video_link} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 text-sm font-medium text-amber-400 bg-amber-500/10 rounded-lg text-center hover:bg-amber-500/20 transition touch-manipulation">
+                        <a href={sermon.video_link} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg text-center hover:bg-blue-100 transition touch-manipulation">
                           Watch Video
                         </a>
                       )}
@@ -310,19 +326,19 @@ export default async function LandingPage() {
             {upcomingPrograms.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-green-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-emerald-600" />
                     Upcoming Programs
                   </h2>
-                  <Link href="/programs" className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
+                  <Link href="/programs" className="text-sm text-emerald-700 hover:text-emerald-800 font-medium flex items-center gap-1">
                     View All <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
                 <div className="space-y-3">
                   {upcomingPrograms.map((program) => (
-                    <article key={program.id} className="card space-y-2">
-                      <h3 className="font-semibold text-white">{program.title}</h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-400">
+                    <article key={program.id} className="bg-white text-slate-900 rounded-2xl p-5 shadow-md border border-slate-300 transition-all hover:shadow-lg space-y-2">
+                      <h3 className="font-semibold text-slate-900">{program.title}</h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           {format(new Date(program.event_date), 'EEE, MMM d')}
@@ -345,46 +361,48 @@ export default async function LandingPage() {
             {featuredTrack && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Music className="w-5 h-5 text-amber-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Music className="w-5 h-5 text-amber-600" />
                     Featured Worship
                   </h2>
-                  <Link href="/music" className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
+                  <Link href="/music" className="text-sm text-amber-700 hover:text-amber-800 font-medium flex items-center gap-1">
                     View All <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
-                <PlayMusicButton
-                  track={{ id: featuredTrack.id, title: featuredTrack.title, artist: featuredTrack.artist_choir, audioUrl: featuredTrack.audio_url }}
-                />
+                <div className="bg-white text-slate-900 rounded-2xl p-5 shadow-md border border-slate-300 transition-all hover:shadow-lg space-y-2">
+                  <PlayMusicButton
+                    track={{ id: featuredTrack.id, title: featuredTrack.title, artist: featuredTrack.artist_choir, audioUrl: featuredTrack.audio_url }}
+                  />
+                </div>
               </div>
             )}
 
             {devotional && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Sunrise className="w-5 h-5 text-amber-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Sunrise className="w-5 h-5 text-orange-600" />
                     Today's Devotional
                   </h2>
-                  <Link href="/devotional" className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
+                  <Link href="/devotional" className="text-sm text-orange-700 hover:text-orange-800 font-medium flex items-center gap-1">
                     View All <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
-                <article className="card space-y-3 p-5">
-                  <div className="flex items-center gap-2 text-xs text-amber-400">
+                <article className="bg-white text-slate-900 rounded-2xl p-5 shadow-md border border-slate-300 transition-all hover:shadow-lg space-y-3">
+                  <div className="flex items-center gap-2 text-xs text-orange-600">
                     <Sunrise className="w-3.5 h-3.5" />
                     <time dateTime={devotional.date}>{devotional.date ? format(new Date(devotional.date), 'EEEE, MMMM d, yyyy') : 'Today'}</time>
                   </div>
-                  <h3 className="text-lg font-semibold text-white">{devotional.title}</h3>
-                  <p className="text-sm text-zinc-300 font-medium italic">"{devotional.scripture_reference}"</p>
-                  <p className="text-xs text-zinc-400 line-clamp-3">{devotional.scripture_text}</p>
-                  <p className="text-sm text-zinc-300 leading-relaxed line-clamp-4">{devotional.reflection}</p>
+                  <h3 className="text-lg font-semibold text-slate-900">{devotional.title}</h3>
+                  <p className="text-sm text-slate-600 font-medium italic">"{devotional.scripture_reference}"</p>
+                  <p className="text-xs text-slate-600 line-clamp-3">{devotional.scripture_text}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed line-clamp-4">{devotional.reflection}</p>
                   {devotional.prayer && (
-                    <p className="text-sm text-zinc-400 italic border-t border-zinc-800 pt-3">{devotional.prayer}</p>
+                    <p className="text-sm text-slate-700 italic border-t border-slate-200 pt-3">{devotional.prayer}</p>
                   )}
                   <Link 
                     href="/devotional" 
-                    className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1 inline-block mt-2"
+                    className="text-sm text-orange-700 hover:text-orange-800 font-medium flex items-center gap-1 inline-block mt-2"
                   >
                     Read Full Devotional <ChevronRight className="w-4 h-4" />
                   </Link>
@@ -396,105 +414,109 @@ export default async function LandingPage() {
       )}
 
       {/* YouTube Music Playlist */}
-      <section>
-        <div className="text-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">GAM Music on YouTube</h2>
-          <p className="text-zinc-400 text-sm">Stream our full worship playlist anytime, anywhere</p>
+      <section className="bg-white text-slate-900 py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">GAM Music on YouTube</h2>
+            <p className="text-slate-600 text-sm">Stream our full worship playlist anytime, anywhere</p>
+          </div>
+          <YouTubePlaylistEmbed 
+            playlistId="PLEjZZqlkBhWs"
+            title="GAM Worship & Praise"
+            height={500}
+            autoplay={false}
+          />
         </div>
-        <YouTubePlaylistEmbed 
-          playlistId="PLEjZZqlkBhWs"
-          title="GAM Worship & Praise"
-          height={500}
-          autoplay={false}
-        />
       </section>
 
       {/* Service Times & Location */}
-      <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6">
-        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-amber-400" />
-          Service Times & Fellowship
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {serviceTimes.map((service) => {
-            const Icon = service.icon;
-            return (
-              <div key={service.day} className="card-compact text-center">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
-                  <Icon className="w-5 h-5 text-amber-400" />
+      <section className="w-full py-12 px-4 bg-slate-950">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-amber-400" />
+            Service Times & Fellowship
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {serviceTimes.map((service) => {
+              const Icon = service.icon;
+              return (
+                <div key={service.day} className="bg-slate-800 text-white rounded-2xl p-5 shadow-md border border-slate-700 transition-all hover:shadow-lg text-center">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
+                    <Icon className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <h3 className="font-semibold text-white">{service.day}</h3>
+                  <p className="text-sm text-amber-400 font-medium">{service.time}</p>
+                  <p className="text-xs text-slate-400 mt-1">{service.label}</p>
+                  {service.location && (
+                    <p className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {service.location}
+                    </p>
+                  )}
+                  {service.livestream && (
+                    <a 
+                      href={service.livestream} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center justify-center gap-1 text-xs text-amber-400 hover:text-amber-300"
+                    >
+                      <Play className="w-3 h-3" />
+                      Watch Live
+                    </a>
+                  )}
                 </div>
-                <h3 className="font-semibold text-white">{service.day}</h3>
-                <p className="text-sm text-amber-400 font-medium">{service.time}</p>
-                <p className="text-xs text-zinc-500 mt-1">{service.label}</p>
-                {service.location && (
-                  <p className="text-xs text-zinc-400 mt-1 flex items-center justify-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {service.location}
-                  </p>
-                )}
-                {service.livestream && (
-                  <a 
-                    href={service.livestream} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center justify-center gap-1 text-xs text-amber-400 hover:text-amber-300"
-                  >
-                    <Play className="w-3 h-3" />
-                    Watch Live
-                  </a>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <div className="bg-zinc-900/30 rounded-xl p-4 border border-zinc-800/50">
-          <h3 className="font-semibold text-white mb-3 flex items-center justify-center gap-2">
-            <MapPin className="w-4 h-4 text-amber-400" />
-            Find Us
-          </h3>
-          <p className="text-sm text-zinc-300 mb-4 text-center">{churchAddress}</p>
-          
-          {/* Google Maps Embed */}
-          <div className="relative rounded-xl overflow-hidden border border-cream-300/50 mb-4" style={{ aspectRatio: '16/9' }}>
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.604860677069!2d3.8858823!3d7.3953746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10398d6b73ecef59%3A0x57b185bc39cc8849!2sGlorious%20Assembly%20Ministries%20Int%27l%20(Inc.)!5e0!3m2!1sen!2sng!4v1700000000000!5m2!1sen!2sng"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen={true}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Glorious Assembly Ministries International Location"
-            />
+              );
+            })}
           </div>
-          
-          <p className="text-xs text-zinc-500 text-center mb-4">
-            9VWQ+46 Ibadan, Oyo State, Nigeria
-          </p>
-          
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-zinc-400">
-            <a href={`tel:${churchPhone}`} className="flex items-center gap-1 hover:text-amber-400 transition">
-              <Phone className="w-4 h-4" />
-              {churchPhone}
-            </a>
-            <a href={`mailto:${churchEmail}`} className="flex items-center gap-1 hover:text-amber-400 transition">
-              <Mail className="w-4 h-4" />
-              {churchEmail}
-            </a>
-            <a 
-              href="https://www.google.com/maps/place/Glorious+Assembly+Ministries+Int'l+(Inc.)/@7.3953632,3.8880763,16z/data=!4m6!3m5!1s0x10398d6b73ecef59:0x57b185bc39cc8849!8m2!3d7.3953746!4d3.888071!16s%2Fg%2F11hch_wqt1?entry=ttu"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-amber-400 transition"
-            >
-              <MapPin className="w-4 h-4" />
-              Open in Maps
-            </a>
+          <div className="bg-slate-800 text-white rounded-2xl p-5 shadow-md border border-slate-700 mt-8">
+            <h3 className="font-semibold text-white mb-3 flex items-center justify-center gap-2">
+              <MapPin className="w-5 h-5 text-amber-400" />
+              Find Us
+            </h3>
+            <p className="text-sm text-slate-300 mb-4 text-center">{churchAddress}</p>
+            
+            {/* Google Maps Embed */}
+            <div className="relative rounded-xl overflow-hidden border border-slate-600 mb-4" style={{ aspectRatio: '16/9' }}>
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.604860677069!2d3.8858823!3d7.3953746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10398d6b73ecef59%3A0x57b185bc39cc8849!2sGlorious%20Assembly%20Ministries%20Int%27l%20(Inc.)!5e0!3m2!1sen!2sng!4v1700000000000!5m2!1sen!2sng"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Glorious Assembly Ministries International Location"
+              />
+            </div>
+            
+            <p className="text-xs text-slate-400 text-center mb-4">
+              9VWQ+46 Ibadan, Oyo State, Nigeria
+            </p>
+            
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-400">
+              <a href={`tel:${churchPhone}`} className="flex items-center gap-1 hover:text-amber-400 transition">
+                <Phone className="w-4 h-4" />
+                {churchPhone}
+              </a>
+              <a href={`mailto:${churchEmail}`} className="flex items-center gap-1 hover:text-amber-400 transition">
+                <Mail className="w-4 h-4" />
+                {churchEmail}
+              </a>
+              <a 
+                href="https://www.google.com/maps/place/Glorious+Assembly+Ministries+Int'l+(Inc.)/@7.3953632,3.8880763,16z/data=!4m6!3m5!1s0x10398d6b73ecef59:0x57b185bc39cc8849!8m2!3d7.3953746!4d3.888071!16s%2Fg%2F11hch_wqt1?entry=ttu"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-amber-400 transition"
+              >
+                <MapPin className="w-4 h-4" />
+                Open in Maps
+              </a>
+            </div>
+            <p className="text-sm text-slate-400 mt-4 text-center">
+              <Globe className="w-4 h-4 inline" />
+              Join us online or in person — all services streamed live
+            </p>
           </div>
-          <p className="text-sm text-zinc-400 mt-4 text-center">
-            <Globe className="w-4 h-4 inline" />
-            Join us online or in person — all services streamed live
-          </p>
         </div>
       </section>
 
