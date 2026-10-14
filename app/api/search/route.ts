@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-static';
+
 interface SearchParams {
   q: string;
   type: 'sermons' | 'music' | 'programs' | 'all';
@@ -32,17 +34,14 @@ async function searchSermons(supabase: any, params: SearchParams) {
 }
 
 async function searchMusic(supabase: any, params: SearchParams) {
-  // For music, we'll do a direct query since we don't have a search function yet
   let query = supabase
     .from('church_music')
     .select('id, title, artist_choir, audio_url, lyrics, release_date')
     .order('created_at', { ascending: false });
 
   if (params.topic_id) {
-    // Music doesn't have topics yet, but could be added
   }
 
-  // Use text search on title and artist
   const searchTerms = params.q.split(' ').filter(Boolean);
   const orConditions = searchTerms.flatMap(term => [
     `title.ilike.%${term}%`,
@@ -120,7 +119,6 @@ export async function GET(req: Request) {
       results.push(...(res.data || []).map((r: any) => ({ ...r, _type: 'programs' })));
     }
 
-    // Sort by relevance (sermons have rank, others by date)
     if (params.type === 'all') {
       results.sort((a, b) => {
         if (a.rank && b.rank) return b.rank - a.rank;

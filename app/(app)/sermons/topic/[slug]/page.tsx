@@ -4,6 +4,16 @@ import { PlaySermonButton } from '@/components/audio/play-button';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
+export async function generateStaticParams() {
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data } = await supabase.from('topics').select('slug').limit(500)
+  return (data || []).map(item => ({ slug: item.slug }))
+}
+
 export default async function TopicSermonsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();

@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { GallerySchema } from '@/lib/validations/schemas';
 import { secureApi, requireAdminRole } from '@/lib/security/api';
 
+export const dynamic = 'force-static';
+
 async function handler(req: Request) {
   const guard = await requireAdminRole(req);
   if (guard.error) return guard.error;

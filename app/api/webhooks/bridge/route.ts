@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { secureCompare } from '@/lib/security/api'
 
+export const dynamic = 'force-static'
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization') || ''

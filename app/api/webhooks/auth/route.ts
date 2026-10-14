@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyWebhookPayload } from '@/lib/security/webhook';
 
+export const dynamic = 'force-static';
+
 export async function POST(req: Request) {
   try {
     // Verify Supabase webhook signature

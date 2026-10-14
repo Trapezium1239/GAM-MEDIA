@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendBulkPushNotifications, isPushConfigured } from '@/lib/push';
 
+export const dynamic = 'force-static';
+
 export async function POST(request: Request) {
   if (!isPushConfigured()) {
     return NextResponse.json({ error: 'Push notifications not configured' }, { status: 503 });

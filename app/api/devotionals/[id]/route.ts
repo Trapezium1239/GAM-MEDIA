@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { secureApi, requireAdminRole } from '@/lib/security/api';
 
+export async function generateStaticParams() {
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data } = await supabase.from('daily_devotionals').select('id').limit(100)
+  if (data && data.length > 0) {
+    return data.map(item => ({ id: item.id }))
+  }
+  // Return a dummy route to satisfy static export requirement
+  return [{ id: 'placeholder' }]
+}
+
 async function getHandler(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   const { id } = await params;

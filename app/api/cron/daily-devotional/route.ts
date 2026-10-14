@@ -5,6 +5,8 @@ import { secureCompare } from '@/lib/security/api';
 import { sendBulkPushNotifications, isPushConfigured } from '@/lib/push';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-static';
+
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization') || '';
   const token = authHeader.replace('Bearer ', '');
@@ -66,11 +68,11 @@ export async function POST(request: Request) {
       if (subscriptions && subscriptions.length > 0) {
         const formatted = subscriptions.map((sub) => ({
           endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth },
-        }));
+          keys: { p256dh: sub.p256dh, auth: sub.auth }
+        }))
 
         const pushResultData = await sendBulkPushNotifications(formatted, {
-          title: `📖 Daily Devotional — ${todayStr}`,
+          title: `Daily Devotional — ${todayStr}`,
           body: `${devotionalContent.scripture_reference}: "${devotionalContent.scripture_text.slice(0, 100)}..."`,
           icon: '/icon-192.png',
           badge: '/icon-192.png',
@@ -83,13 +85,9 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({
-      status: 'created',
-      devotional_id: devotional.id,
-      push: pushResult,
-    });
+    return NextResponse.json({ status: 'created', devotional_id: devotional.id, push: pushResult });
   } catch (err) {
-    console.error('[daily-devotional-cron] Error:', err);
+    console.error('[daily-devotional] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

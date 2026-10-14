@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { secureApi, requireAdminRole } from '@/lib/security/api';
 
+export const dynamic = 'force-static';
+
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg', 'audio/aac'];
 

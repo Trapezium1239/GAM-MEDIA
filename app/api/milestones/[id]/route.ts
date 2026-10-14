@@ -3,6 +3,20 @@ import { MilestoneUpdateSchema } from '@/lib/validations/schemas'
 import { secureApi, requireAdminRole } from '@/lib/security/api'
 import { createClient } from '@/lib/supabase/server'
 
+export async function generateStaticParams() {
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data } = await supabase.from('project_milestones').select('id').limit(100)
+  if (data && data.length > 0) {
+    return data.map(item => ({ id: item.id }))
+  }
+  // Return a dummy route to satisfy static export requirement
+  return [{ id: 'placeholder' }]
+}
+
 async function patchHandler(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdminRole(req)
   if (guard.error) return guard.error

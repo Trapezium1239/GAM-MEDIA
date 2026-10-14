@@ -47,8 +47,8 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   generateEtags: true,
-  turbopack: {},
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: '*.cloudinary.com' },
       { protocol: 'https', hostname: '*.supabase.co' },
@@ -58,10 +58,6 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 48, 96, 144, 192, 256, 384, 512],
     minimumCacheTTL: 60 * 60 * 24,
-  },
-  experimental: {
-    serverActions: { bodySizeLimit: '2mb' },
-    optimizePackageImports: ['lucide-react', 'date-fns', 'zustand', '@supabase/supabase-js'],
   },
   async headers() {
     return securityHeaders

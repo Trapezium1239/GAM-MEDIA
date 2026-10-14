@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { secureApi, requireAdminRole } from '@/lib/security/api';
 import { fetchTodaysDevotional } from '@/lib/bible-api';
 
+export const dynamic = 'force-static';
+
 async function getHandler(req: Request) {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);

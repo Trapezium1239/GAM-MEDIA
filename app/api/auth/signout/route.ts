@@ -18,3 +18,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-static';

@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { secureApi, requireAdminRole } from '@/lib/security/api';
 
+export const dynamic = 'force-static';
+
 const AlertSchema = z.object({
   title: z.string().min(3).max(100),
   message: z.string().min(5).max(500),

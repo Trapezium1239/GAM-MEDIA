@@ -19,6 +19,20 @@ interface Devotional {
   published_at: string | null;
 }
 
+export async function generateStaticParams() {
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data } = await supabase.from('daily_devotionals').select('date').limit(500)
+  if (data && data.length > 0) {
+    return data.map(item => ({ date: item.date }))
+  }
+  // Return a dummy route to satisfy static export requirement
+  return [{ date: '2024-01-01' }]
+}
+
 export default async function DevotionalByDatePage({ params }: { params: Promise<{ date: string }> }) {
   const { date } = await params;
   const supabase = await createClient();

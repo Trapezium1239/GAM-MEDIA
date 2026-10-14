@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { secureApi, requireAdminRole } from '@/lib/security/api';
 
+export const dynamic = 'force-static';
+
 interface SermonInput {
   title: string;
   preacher: string;
@@ -15,8 +17,8 @@ interface SermonInput {
 interface BulkImportRequest {
   sermons: SermonInput[];
   options?: {
-    skipDuplicates?: boolean; // Skip if title+date match existing
-    uploadAudio?: boolean; // For future Cloudinary integration
+    skipDuplicates?: boolean;
+    uploadAudio?: boolean;
   };
 }
 
