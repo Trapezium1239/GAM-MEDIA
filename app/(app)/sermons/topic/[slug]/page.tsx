@@ -1,27 +1,76 @@
-import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useParams } from 'next/navigation';
 import { PlaySermonButton } from '@/components/audio/play-button';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export async function generateStaticParams() {
-  const { createClient } = await import('@supabase/supabase-js')
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-  const { data } = await supabase.from('topics').select('slug').limit(500)
-  return (data || []).map(item => ({ slug: item.slug }))
+interface Topic {
+  id: string;
+  name: string;
 }
 
-export default async function TopicSermonsPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const supabase = await createClient();
+interface Sermon {
+  id: string;
+  title: string;
+  preacher: string;
+  date: string;
+  audio_url: string | null;
+  video_link: string | null;
+}
 
-  const { data: topic } = await supabase.from('topics').select('id, name').eq('slug', slug).single();
-  if (!topic) notFound();
+export default function TopicSermonsPage() {
+  const params = useParams<{ slug: string }>();
+  const slug = params?.slug ?? '';
+  const [topic, setTopic] = useState<Topic | null>(null);
+  const [sermons, setSermons] = useState<Sermon[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const { data: sermons } = await supabase.from('sermons').select('*').eq('topic_id', topic.id).order('date', { ascending: false });
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    const supabase = createClient();
+    (async () => {
+      const { data: topicRow } = await supabase.from('topics').select('id, name').eq('slug', slug).maybeSingle();
+      if (cancelled) return;
+      if (!topicRow) {
+        setTopic(null);
+        setLoading(false);
+        return;
+      }
+      setTopic(topicRow as Topic);
+      const { data: sermonRows } = await supabase
+        .from('sermons')
+        .select('*')
+        .eq('topic_id', (topicRow as Topic).id)
+        .order('date', { ascending: false });
+      if (cancelled) return;
+      setSermons((sermonRows as Sermon[]) || []);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="empty-state">
+        <Loader2 className="empty-state-icon animate-spin" />
+        <p className="empty-state-title">Loading series...</p>
+      </div>
+    );
+  }
+
+  if (!topic) {
+    return (
+      <div className="empty-state">
+        <p className="text-sm text-zinc-400">Topic not found.</p>
+        <Link href="/sermons" className="btn-ghost text-xs mt-3">Back to Word Vault</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 py-4">

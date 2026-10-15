@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BookOpen, Music, Calendar, User, Heart } from 'lucide-react';
+import { triggerHaptic } from '@/lib/native/haptics';
 
 const navItems = [
   { href: '/app', label: 'Home', icon: Home },
@@ -32,6 +33,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => void triggerHaptic('light')}
               className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 touch-manipulation min-w-[56px] ${
                 isActive
                   ? 'text-wine-600'

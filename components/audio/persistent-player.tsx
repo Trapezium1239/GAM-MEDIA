@@ -54,26 +54,42 @@ export function PersistentPlayer() {
     }
   }, [isPlaying, currentTrack]);
 
-  // Media Session API
+  // Media Session API — lock-screen + background controls (native + web)
   useEffect(() => {
-    if (!('mediaSession' in navigator) || !currentTrack) return;
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !currentTrack) return;
 
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: currentTrack.title,
-      artist: currentTrack.artist,
-      album: 'GAM App',
-    });
-    navigator.mediaSession.setActionHandler('play', () => useAudioStore.setState({ isPlaying: true }));
-    navigator.mediaSession.setActionHandler('pause', () => useAudioStore.setState({ isPlaying: false }));
-    navigator.mediaSession.setActionHandler('stop', () => stop());
-    navigator.mediaSession.setActionHandler('previoustrack', null);
-    navigator.mediaSession.setActionHandler('nexttrack', null);
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (details.seekTime !== undefined) {
-        seek(details.seekTime);
-      }
-    });
-  }, [currentTrack, stop]);
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        album: 'GAM Media Vault',
+      });
+    } catch {
+      return;
+    }
+    try {
+      navigator.mediaSession.setActionHandler('play', () => useAudioStore.setState({ isPlaying: true }));
+    } catch { /* handler unsupported — safe to ignore */ }
+    try {
+      navigator.mediaSession.setActionHandler('pause', () => useAudioStore.setState({ isPlaying: false }));
+    } catch { /* handler unsupported — safe to ignore */ }
+    try {
+      navigator.mediaSession.setActionHandler('stop', () => stop());
+    } catch { /* handler unsupported — safe to ignore */ }
+    try {
+      navigator.mediaSession.setActionHandler('seekbackward', () => seekRelative(-10));
+    } catch { /* handler unsupported — safe to ignore */ }
+    try {
+      navigator.mediaSession.setActionHandler('seekforward', () => seekRelative(10));
+    } catch { /* handler unsupported — safe to ignore */ }
+    try {
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined) {
+          seek(details.seekTime);
+        }
+      });
+    } catch { /* handler unsupported — safe to ignore */ }
+  }, [currentTrack, stop, seek, seekRelative]);
 
   // Keyboard shortcuts
   useEffect(() => {

@@ -20,20 +20,17 @@ export default function AdminMusicPage() {
     setResult(null);
 
     try {
-      const res = await fetch('/api/admin/music', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          artist_choir: artist.trim() || 'Church Choir',
-          audio_url: audioUrl.trim(),
-          lyrics: lyrics.trim() || undefined,
-          release_date: releaseDate || undefined,
-        }),
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { error } = await supabase.from('church_music').insert({
+        title: title.trim(),
+        artist_choir: artist.trim() || 'Church Choir',
+        audio_url: audioUrl.trim(),
+        lyrics: lyrics.trim() || null,
+        release_date: releaseDate || null,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Failed to add track');
+      if (error) throw new Error(error.message || 'Failed to add track');
 
       setResult({ ok: true, msg: 'Track added!' });
       setTitle('');

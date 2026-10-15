@@ -1,21 +1,69 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { LogOut, User, Users, Shield, ChevronRight, FileText } from 'lucide-react';
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { LogOut, User, Users, Shield, ChevronRight, FileText, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function ProfilePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+interface ProfileRow {
+  full_name: string | null;
+  role: string | null;
+  church_group: string | null;
+  lite_mode: boolean | null;
+}
 
-  if (!user) redirect('/login');
+export default function ProfilePage() {
+  const router = useRouter();
+  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    (async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!authUser) {
+        router.replace('/login');
+        return;
+      }
+      setUser({ email: authUser.email ?? '' });
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setProfile((profileRow as ProfileRow) || null);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
-  const isAdmin = profile && ['admin', 'pastor'].includes(profile.role);
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } finally {
+      router.replace('/login');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="empty-state">
+        <Loader2 className="empty-state-icon animate-spin" />
+        <p className="empty-state-title">Loading profile...</p>
+      </div>
+    );
+  }
+
+  const isAdmin = !!profile && ['admin', 'pastor'].includes(profile.role ?? '');
 
   return (
     <div className="space-y-6 py-4 pb-32">
@@ -31,7 +79,7 @@ export default async function ProfilePage() {
           </div>
           <div className="min-w-0">
             <p className="font-semibold text-white truncate">{profile?.full_name || 'Member'}</p>
-            <p className="text-xs text-zinc-400 truncate">{user.email}</p>
+            <p className="text-xs text-zinc-400 truncate">{user?.email}</p>
           </div>
         </div>
 
@@ -99,12 +147,15 @@ export default async function ProfilePage() {
         </Link>
       </nav>
 
-      <form action="/api/auth/signout" method="POST">
-        <button type="submit" className="btn-secondary w-full flex items-center justify-center gap-2">
-          <LogOut className="w-4 h-4" />
-          Sign Out
-        </button>
-      </form>
+      <button
+        type="button"
+        onClick={handleSignOut}
+        disabled={signingOut}
+        className="btn-secondary w-full flex items-center justify-center gap-2"
+      >
+        <LogOut className="w-4 h-4" />
+        {signingOut ? 'Signing Out...' : 'Sign Out'}
+      </button>
     </div>
   );
 }

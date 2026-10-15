@@ -3,52 +3,103 @@
 import { useEffect, useState } from 'react';
 import { Wifi, WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
+import { flushOfflineQueue, getOfflineQueueCount } from '@/lib/offline-queue';
+
+async function getNativeStatus(): Promise<boolean> {
+  try {
+    const { Capacitor } = await import('@capacitor/core');
+    if (!Capacitor.isNativePlatform()) return navigator.onLine;
+    const { Network } = await import('@capacitor/network');
+    const status = await Network.getStatus();
+    return status.connected;
+  } catch {
+    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+  }
+}
 
 export function ConnectivityIndicator() {
   const [isOnline, setIsOnline] = useState(true);
   const [wasOffline, setWasOffline] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const handleOnline = () => {
-      if (!isOnline) {
-        setIsOnline(true);
-        if (wasOffline) {
-          toast({
-            type: 'success',
-            title: 'Back online',
-            description: 'Syncing data...',
-            duration: 3000,
-          });
+    let cancelled = false;
+
+    const handleOnline = async () => {
+      if (cancelled) return;
+      setIsOnline(true);
+      if (!wasOffline) return;
+      setSyncing(true);
+      try {
+        const pendingBefore = await getOfflineQueueCount();
+        const { flushed, pending } = await flushOfflineQueue();
+        if (cancelled) return;
+        toast({
+          type: 'success',
+          title: 'Back online',
+          description:
+            pendingBefore > 0
+              ? `Synced ${flushed} queued submission${flushed === 1 ? '' : 's'}${pending > 0 ? ` — ${pending} still pending` : ''}.`
+              : 'Syncing data...',
+          duration: 4000,
+        });
+      } catch {
+        if (!cancelled) toast({ type: 'info', title: 'Back online', description: 'Sync will retry shortly.', duration: 3000 });
+      } finally {
+        if (!cancelled) {
+          setSyncing(false);
           setWasOffline(false);
         }
       }
     };
 
     const handleOffline = () => {
+      if (cancelled) return;
       setIsOnline(false);
       setWasOffline(true);
       toast({
         type: 'info',
         title: 'Offline mode',
-        description: 'Playing from local storage. Changes will sync when online.',
+        description: 'Playing from local storage. Submissions queue and sync when online.',
         duration: 5000,
       });
     };
 
-    // Initial check
-    setIsOnline(navigator.onLine);
+    getNativeStatus().then((online) => {
+      if (!cancelled) setIsOnline(online);
+    });
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    let removeNativeListener: (() => void) | null = null;
+    (async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (!Capacitor.isNativePlatform()) return;
+        const { Network } = await import('@capacitor/network');
+        const listener = await Network.addListener('networkStatusChange', (status) => {
+          if (cancelled) return;
+          if (status.connected) void handleOnline();
+          else handleOffline();
+        });
+        removeNativeListener = () => void listener.remove();
+      } catch {
+        // web fallback already wired
+      }
+    })();
+
     return () => {
+      cancelled = true;
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      if (removeNativeListener) removeNativeListener();
     };
-  }, [isOnline, wasOffline, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wasOffline]);
 
-  if (isOnline && !wasOffline) return null;
+  if (isOnline && !wasOffline && !syncing) return null;
 
   return (
     <div
@@ -81,14 +132,33 @@ export function ConnectivityStatusIcon() {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    setIsOnline(navigator.onLine);
+    let cancelled = false;
+    getNativeStatus().then((online) => {
+      if (!cancelled) setIsOnline(online);
+    });
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    let removeNativeListener: (() => void) | null = null;
+    (async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (!Capacitor.isNativePlatform()) return;
+        const { Network } = await import('@capacitor/network');
+        const listener = await Network.addListener('networkStatusChange', (status) => {
+          if (!cancelled) setIsOnline(status.connected);
+        });
+        removeNativeListener = () => void listener.remove();
+      } catch {
+        // silent
+      }
+    })();
     return () => {
+      cancelled = true;
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      if (removeNativeListener) removeNativeListener();
     };
   }, []);
 

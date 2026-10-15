@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Search, X, Filter, ChevronDown, Loader2, Keyboard, ArrowUp, ArrowDown, Music } from 'lucide-react';
 import { PlaySermonButton } from '@/components/audio/play-button';
+import { createClient } from '@/lib/supabase/client';
 
 interface Sermon {
   id: string;
@@ -60,7 +61,7 @@ export function SermonSearch({
     });
   }, [initialSermons, debouncedQuery, selectedTopic]);
 
-  // Server-side search
+  // MOBILE-ONLY: Supabase full-text RPC directly (no /api routes in static export)
   const performServerSearch = useCallback(async () => {
     if (!shouldUseServer || debouncedQuery.length < 2) {
       setServerResults(null);
@@ -71,19 +72,18 @@ export function SermonSearch({
     setSearchError(null);
 
     try {
-      const params = new URLSearchParams({
-        q: debouncedQuery,
-        limit: '50',
-        offset: '0',
+      const supabase = createClient();
+      const fn = 'search_sermons';
+      const { data, error } = await supabase.rpc(fn, {
+        p_query: debouncedQuery,
+        p_topic_id: selectedTopic !== 'all' ? selectedTopic : null,
+        p_limit: 50,
+        p_offset: 0,
       });
-      if (selectedTopic !== 'all') params.set('topic_id', selectedTopic);
 
-      const res = await fetch(`/api/search/sermons?${params}`);
-      const data = await res.json();
+      if (error) throw new Error(error.message);
 
-      if (!res.ok) throw new Error(data.error || 'Search failed');
-
-      setServerResults(data.sermons || []);
+      setServerResults((data || []) as Sermon[]);
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : 'Search failed');
       setServerResults(null);

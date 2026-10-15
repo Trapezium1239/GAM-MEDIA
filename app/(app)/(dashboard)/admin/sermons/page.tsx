@@ -23,23 +23,17 @@ export default function AdminSermonsPage() {
     setResult(null);
 
     try {
-      const payload = {
+      const supabase = createClient();
+      const { error } = await supabase.from('sermons').insert({
         title: title.trim(),
         preacher: preacher.trim(),
         date,
-        audio_url: audioUrl.trim() || undefined,
-        video_link: videoLink.trim() || undefined,
-        notes: notes.trim() || undefined,
-      };
-
-      const res = await fetch('/api/admin/sermons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        audio_url: audioUrl.trim() || null,
+        video_link: videoLink.trim() || null,
+        notes: notes.trim() || null,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Failed to create sermon');
+      if (error) throw new Error(error.message || 'Failed to create sermon');
 
       setResult({ ok: true, msg: 'Sermon added!' });
       setTitle('');

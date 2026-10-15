@@ -11,6 +11,24 @@ export default function WelcomePage() {
   const handleSubmit = async (formData: FormData) => {
     setError(null)
     startTransition(async () => {
+      // Offline-first: queue locally when there is no connection.
+      try {
+        const online = typeof navigator === 'undefined' ? true : navigator.onLine;
+        if (!online) {
+          const { queueOfflineMutation } = await import('@/lib/offline-queue');
+          await queueOfflineMutation('first_timer', {
+            full_name: formData.get('full_name'),
+            phone: formData.get('phone'),
+            is_first_time: formData.get('is_first_time') === 'on' ? 'on' : '',
+            prayer_request: formData.get('prayer_request') || '',
+            interested_unit: formData.get('interested_unit') || 'general',
+          });
+          setSubmitted(true);
+          return;
+        }
+      } catch {
+        // Fall through to normal submission attempt
+      }
       const result = await submitFirstTimer(formData)
       if (result.error) {
         setError(result.error)

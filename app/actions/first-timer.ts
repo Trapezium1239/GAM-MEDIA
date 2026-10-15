@@ -1,5 +1,5 @@
-'use server'
-import { createClient } from '@/lib/supabase/server'
+// Client-side submission helper (no server runtime — static export).
+import { createClient } from '@/lib/supabase/client'
 import { FirstTimerSchema } from '@/lib/validations/schemas'
 
 export async function submitFirstTimer(formData: FormData) {
@@ -15,7 +15,7 @@ export async function submitFirstTimer(formData: FormData) {
     return { error: parsed.error.errors[0]?.message || 'Invalid input' }
   }
 
-  const supabase = await createClient()
+  const supabase = createClient()
   const { data, error } = await supabase
     .from('first_timers')
     .insert(parsed.data)
@@ -23,20 +23,6 @@ export async function submitFirstTimer(formData: FormData) {
     .single()
 
   if (error) return { error: 'Failed to save submission. Try again.' }
-
-  try {
-    const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    await fetch(`${origin}/api/webhooks/bridge`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.CRON_SECRET || ''}`,
-      },
-      body: JSON.stringify({ type: 'first_timer', payload: data }),
-    })
-  } catch (e) {
-    console.error('Bridge notification trigger failed:', e)
-  }
 
   return { success: true, id: data.id }
 }

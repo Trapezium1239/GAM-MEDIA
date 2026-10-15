@@ -62,6 +62,12 @@ export default function RosterPage() {
     if (swapReason) formData.append('swap_reason', swapReason)
 
     startTransition(async () => {
+      try {
+        const { triggerHaptic } = await import('@/lib/native/haptics');
+        await triggerHaptic(action === 'cover_shift' ? 'medium' : 'light');
+      } catch {
+        // haptics never block roster actions
+      }
       const result = await requestShiftSwap(formData)
       if (result.error) setError(result.error)
       else fetchShifts()

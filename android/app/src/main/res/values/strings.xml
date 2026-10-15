@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GAM Church</string>
+    <string name="title_activity_main">GAM Church</string>
+    <string name="package_name">com.gam.app</string>
+    <string name="custom_url_scheme">com.gam.app</string>
+</resources>

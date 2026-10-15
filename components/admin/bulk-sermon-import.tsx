@@ -94,19 +94,22 @@ export default function BulkSermonImport() {
     setResult(null);
 
     try {
-      const res = await fetch('/api/admin/sermons/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sermons: toImport,
-          options: { skipDuplicates: true },
-        }),
-      });
+      // MOBILE-ONLY: insert directly via Supabase (no bulk API route in static export)
+      const supabase = createClient();
+      const rows = toImport.map((s) => ({
+        title: s.title,
+        preacher: s.preacher,
+        date: s.date,
+        audio_url: s.audio_url || null,
+        video_link: s.video_link || null,
+        notes: s.notes || null,
+        topic_id: s.topic_id || null,
+      }));
+      const { data, error } = await supabase.from('sermons').insert(rows).select('id');
+      if (error) throw new Error(error.message || 'Import failed');
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Import failed');
-
-      setResult({ ok: true, msg: `Imported ${data.inserted} sermons${data.skipped ? ` (${data.skipped} skipped)` : ''}`, data });
+      const inserted = data?.length || 0;
+      setResult({ ok: true, msg: `Imported ${inserted} sermon${inserted === 1 ? '' : 's'}`, data: { inserted } });
       setSelectedIndices(new Set());
       router.refresh();
     } catch (err) {

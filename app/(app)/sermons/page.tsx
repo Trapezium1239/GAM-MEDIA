@@ -1,6 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
-import { Calendar, BookOpen, Volume2, Play } from 'lucide-react';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Calendar, BookOpen, Volume2, Play, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { PlaySermonButton } from '@/components/audio/play-button';
@@ -22,16 +23,35 @@ interface Topic {
   slug: string;
 }
 
-export default async function SermonsPage() {
-  const supabase = await createClient();
+export default function SermonsPage() {
+  const [sermons, setSermons] = useState<(Sermon & { topics: Topic | null })[] | null>(null);
+  const [topics, setTopics] = useState<Topic[]>([]);
 
-  const [sermonsRes, topicsRes] = await Promise.all([
-    supabase.from('sermons').select('*, topics(name, slug)').order('date', { ascending: false }),
-    supabase.from('topics').select('*').order('name'),
-  ]);
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    (async () => {
+      const [sermonsRes, topicsRes] = await Promise.all([
+        supabase.from('sermons').select('*, topics(name, slug)').order('date', { ascending: false }),
+        supabase.from('topics').select('*').order('name'),
+      ]);
+      if (cancelled) return;
+      setSermons(((sermonsRes.data || []) as (Sermon & { topics: Topic | null })[]));
+      setTopics((topicsRes.data || []) as Topic[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const sermons = (sermonsRes.data || []) as (Sermon & { topics: Topic | null })[];
-  const topics = (topicsRes.data || []) as Topic[];
+  if (sermons === null) {
+    return (
+      <div className="empty-state">
+        <Loader2 className="empty-state-icon animate-spin" />
+        <p className="empty-state-title">Loading sermons...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 py-4 pb-32">

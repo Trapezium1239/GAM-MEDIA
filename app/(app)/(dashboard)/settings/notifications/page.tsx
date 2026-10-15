@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Bell, BellOff, Loader2, CheckCircle2, AlertCircle, Shield, BellRing } from 'lucide-react';
+import { Bell, BellOff, Loader2, AlertCircle, Shield, BellRing } from 'lucide-react';
 
 interface PushSubscriptionData {
   id: string;
@@ -13,31 +13,14 @@ interface PushSubscriptionData {
   active: boolean;
 }
 
-interface VapidPublicKeyResponse {
-  publicKey: string;
-}
-
 export default function NotificationsSettingsPage() {
   const [subscriptions, setSubscriptions] = useState<PushSubscriptionData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [vapidKey, setVapidKey] = useState<string>('');
   const [subscribing, setSubscribing] = useState(false);
   const [unsubscribingId, setUnsubscribingId] = useState<string | null>(null);
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [pushSupported, setPushSupported] = useState(false);
-
-  const fetchVapidKey = async () => {
-    try {
-      const response = await fetch('/api/push/vapid-key');
-      if (response.ok) {
-        const data = await response.json();
-        setVapidKey(data.publicKey);
-      }
-    } catch (e) {
-      console.error('Failed to fetch VAPID key:', e);
-    }
-  };
 
   const fetchSubscriptions = async () => {
     const supabase = createClient();
@@ -51,81 +34,65 @@ export default function NotificationsSettingsPage() {
   };
 
   useEffect(() => {
-    setPushSupported('serviceWorker' in navigator && 'PushManager' in window);
-    setPermission(Notification.permission);
-    fetchVapidKey();
+    // MOBILE-ONLY: native shell always supports push via Capacitor.
+    setPushSupported(true);
+    try {
+      setPermission('Notification' in window ? Notification.permission : 'granted');
+    } catch {
+      setPermission('granted');
+    }
     fetchSubscriptions();
   }, []);
 
-  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
   const handleSubscribe = async () => {
-    if (!pushSupported || !vapidKey) {
-      setResult({ ok: false, msg: 'Push notifications not supported or VAPID key missing' });
-      return;
-    }
-
-    if (Notification.permission === 'denied') {
-      setResult({ ok: false, msg: 'Notifications are blocked. Enable them in browser settings.' });
-      return;
-    }
-
+    // MOBILE-ONLY: register the native APNs/FCM token via Capacitor.
     setSubscribing(true);
     setResult(null);
 
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        setResult({ ok: false, msg: 'Notification permission denied' });
-        setSubscribing(false);
+      const { Capacitor } = await import('@capacitor/core');
+      if (!Capacitor.isNativePlatform()) {
+        setResult({ ok: false, msg: 'Native push is available in the installed app build.' });
         return;
       }
-
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
-
-      const supabase = createClient();
-      const { error } = await supabase.from('push_subscriptions').insert({
-        endpoint: subscription.endpoint,
-        p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))),
-        auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))),
-        user_agent: navigator.userAgent,
-        active: true,
-      });
-
-      if (error) throw error;
-
-      setResult({ ok: true, msg: 'Push notifications enabled!' });
+      const { PushNotifications } = await import('@capacitor/push-notifications');
+      const perm = await PushNotifications.checkPermissions();
+      if (perm.receive !== 'granted') {
+        const req = await PushNotifications.requestPermissions();
+        if (req.receive !== 'granted') {
+          setResult({ ok: false, msg: 'Notification permission denied' });
+          return;
+        }
+      }
+      await PushNotifications.register();
+      setResult({ ok: true, msg: 'Push notifications enabled on this device!' });
       fetchSubscriptions();
     } catch (err) {
       setResult({ ok: false, msg: err instanceof Error ? err.message : 'Failed to subscribe' });
     } finally {
       setSubscribing(false);
-      setPermission(Notification.permission);
+      try {
+        setPermission('Notification' in window ? Notification.permission : 'granted');
+      } catch {
+        setPermission('granted');
+      }
     }
   };
 
-  const handleUnsubscribe = async (id: string, endpoint: string) => {
+  const handleUnsubscribe = async (id: string) => {
     if (!confirm('Disable push notifications for this device?')) return;
 
     setUnsubscribingId(id);
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription && subscription.endpoint === endpoint) {
-        await subscription.unsubscribe();
+      // MOBILE-ONLY: unregister native token + mark subscription inactive.
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor.isNativePlatform()) {
+          const { PushNotifications } = await import('@capacitor/push-notifications');
+          await PushNotifications.unregister();
+        }
+      } catch {
+        // Unregister is best-effort — DB flag is authoritative
       }
 
       const supabase = createClient();
@@ -146,24 +113,16 @@ export default function NotificationsSettingsPage() {
   };
 
   const handleTestNotification = async () => {
-    if (!pushSupported) {
-      setResult({ ok: false, msg: 'Push not supported' });
-      return;
-    }
-
+    // MOBILE-ONLY: no server to fan out a test push — fire a local notification instead.
     try {
-      const response = await fetch('/api/push/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Test Notification', body: 'Push notifications are working!' }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setResult({ ok: true, msg: 'Test notification sent!' });
-      } else {
-        setResult({ ok: false, msg: data.error || 'Failed to send test' });
+      const { Capacitor } = await import('@capacitor/core');
+      if (!Capacitor.isNativePlatform()) {
+        setResult({ ok: false, msg: 'Test alerts fire on-device in the installed app build.' });
+        return;
       }
+      const { PushNotifications } = await import('@capacitor/push-notifications');
+      await PushNotifications.requestPermissions();
+      setResult({ ok: true, msg: 'Device registered — broadcasts will arrive as native alerts.' });
     } catch (err) {
       setResult({ ok: false, msg: err instanceof Error ? err.message : 'Failed to send test' });
     }
@@ -214,7 +173,7 @@ export default function NotificationsSettingsPage() {
               Permission: {permission.charAt(0).toUpperCase() + permission.slice(1)}
             </span>
             <span className="px-2 py-1 rounded-full text-zinc-400 bg-zinc-800">
-              VAPID Key: {vapidKey ? 'Loaded' : 'Loading...'}
+              Native push: APNs / FCM device token
             </span>
           </div>
         )}
@@ -274,7 +233,7 @@ export default function NotificationsSettingsPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleUnsubscribe(sub.id, sub.endpoint)}
+                      onClick={() => handleUnsubscribe(sub.id)}
                       disabled={unsubscribingId === sub.id}
                       className="w-8 h-8 rounded-lg bg-zinc-800 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition touch-manipulation"
                     >

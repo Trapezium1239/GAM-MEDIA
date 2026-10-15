@@ -1,8 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { Calendar, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react';
+import { Calendar, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { DevotionalActions } from '@/components/devotional/devotional-actions';
 
 interface Devotional {
   id: string;
@@ -19,31 +22,51 @@ interface Devotional {
   published_at: string | null;
 }
 
-export async function generateStaticParams() {
-  const { createClient } = await import('@supabase/supabase-js')
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-  const { data } = await supabase.from('daily_devotionals').select('date').limit(500)
-  if (data && data.length > 0) {
-    return data.map(item => ({ date: item.date }))
+export default function DevotionalByDatePage() {
+  const params = useParams<{ date: string }>();
+  const date = params?.date ?? '';
+  const [devotional, setDevotional] = useState<Devotional | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!date) return;
+    let cancelled = false;
+    const supabase = createClient();
+    supabase
+      .from('daily_devotionals')
+      .select('*')
+      .eq('date', date)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) {
+          setDevotional((data as Devotional) || null);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
+
+  if (loading) {
+    return (
+      <div className="empty-state">
+        <Loader2 className="empty-state-icon animate-spin" />
+        <p className="empty-state-title">Loading devotional...</p>
+      </div>
+    );
   }
-  // Return a dummy route to satisfy static export requirement
-  return [{ date: '2024-01-01' }]
-}
 
-export default async function DevotionalByDatePage({ params }: { params: Promise<{ date: string }> }) {
-  const { date } = await params;
-  const supabase = await createClient();
-
-  const { data: devotional } = await supabase
-    .from('daily_devotionals')
-    .select('*')
-    .eq('date', date)
-    .single();
-
-  if (!devotional) notFound();
+  if (!devotional) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+        <BookOpen className="w-16 h-16 text-zinc-700" />
+        <h2 className="text-2xl font-bold text-white">Devotional Not Found</h2>
+        <p className="text-sm text-zinc-400 max-w-sm">No devotional was published for this date.</p>
+        <Link href="/devotional/archive" className="btn-secondary">Back to Archive</Link>
+      </div>
+    );
+  }
 
   const devDate = new Date(devotional.date);
 
@@ -112,24 +135,7 @@ export default async function DevotionalByDatePage({ params }: { params: Promise
           <Calendar className="w-4 h-4" />
           Archive
         </Link>
-        <button
-          className="btn-secondary flex items-center gap-2"
-          onClick={async () => {
-            if (navigator.share) {
-              await navigator.share({
-                title: 'Daily Devotional',
-                text: `Daily Devotional — ${new Date().toLocaleDateString()}`,
-                url: window.location.href,
-              });
-            } else {
-              await navigator.clipboard.writeText(window.location.href);
-              alert('Link copied to clipboard!');
-            }
-          }}
-        >
-          <Download className="w-4 h-4" />
-          Share
-        </button>
+        <DevotionalActions />
       </div>
 
       {/* Navigation */}

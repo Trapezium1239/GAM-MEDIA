@@ -51,20 +51,16 @@ export default function AdminSettingsPage() {
     setResult(null);
 
     try {
-      const res = await fetch('/api/admin/directory', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category,
-          title: title.trim(),
-          detail_value: detailValue.trim(),
-          extra_meta: extraMeta.trim() || undefined,
-          display_order: items.length,
-        }),
+      const supabase = createClient();
+      const { error } = await supabase.from('church_directory').insert({
+        category,
+        title: title.trim(),
+        detail_value: detailValue.trim(),
+        extra_meta: extraMeta.trim() || null,
+        display_order: items.length,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Failed to add entry');
+      if (error) throw new Error(error.message || 'Failed to add entry');
 
       setResult({ ok: true, msg: 'Entry added!' });
       setTitle('');
@@ -82,8 +78,9 @@ export default function AdminSettingsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this entry?')) return;
     try {
-      const res = await fetch(`/api/admin/directory?id=${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
+      const supabase = createClient();
+      const { error } = await supabase.from('church_directory').delete().eq('id', id);
+      if (error) throw new Error(error.message || 'Failed to delete');
       setItems(items.filter((i) => i.id !== id));
     } catch {
       setResult({ ok: false, msg: 'Failed to delete entry' });

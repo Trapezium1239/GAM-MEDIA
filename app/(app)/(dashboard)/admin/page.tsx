@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
-import { Megaphone, BookOpen, Calendar, Image, Music, Settings, ChevronRight, Mail, Wifi, RotateCcw, Target, Sun } from 'lucide-react';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Megaphone, BookOpen, Calendar, Image, Music, Settings, ChevronRight, Mail, Wifi, RotateCcw, Target, Sun, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const adminLinks = [
@@ -16,24 +18,52 @@ const adminLinks = [
   { href: '/admin/settings', label: 'Settings', icon: Settings, color: 'text-zinc-400 bg-zinc-500/10' },
 ];
 
-export default async function AdminOverviewPage() {
-  const supabase = await createClient();
+export default function AdminOverviewPage() {
+  const [stats, setStats] = useState<{ label: string; value: number }[] | null>(null);
 
-  const [sermonsCount, programsCount, galleryCount, musicCount, activeAlerts] = await Promise.all([
-    supabase.from('sermons').select('id', { count: 'exact', head: true }),
-    supabase.from('programs').select('id', { count: 'exact', head: true }),
-    supabase.from('gallery_items').select('id', { count: 'exact', head: true }),
-    supabase.from('church_music').select('id', { count: 'exact', head: true }),
-    supabase.from('alerts').select('id', { count: 'exact', head: true }).gt('expires_at', new Date().toISOString()),
-  ]);
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    (async () => {
+      try {
+        const [sermonsCount, programsCount, galleryCount, musicCount, activeAlerts] = await Promise.all([
+          supabase.from('sermons').select('id', { count: 'exact', head: true }),
+          supabase.from('programs').select('id', { count: 'exact', head: true }),
+          supabase.from('gallery_items').select('id', { count: 'exact', head: true }),
+          supabase.from('church_music').select('id', { count: 'exact', head: true }),
+          supabase.from('alerts').select('id', { count: 'exact', head: true }).gt('expires_at', new Date().toISOString()),
+        ]);
+        if (cancelled) return;
+        setStats([
+          { label: 'Sermons', value: sermonsCount.count ?? 0 },
+          { label: 'Programs', value: programsCount.count ?? 0 },
+          { label: 'Gallery', value: galleryCount.count ?? 0 },
+          { label: 'Music', value: musicCount.count ?? 0 },
+          { label: 'Active Alerts', value: activeAlerts.count ?? 0 },
+        ]);
+      } catch {
+        if (!cancelled) setStats([
+          { label: 'Sermons', value: 0 },
+          { label: 'Programs', value: 0 },
+          { label: 'Gallery', value: 0 },
+          { label: 'Music', value: 0 },
+          { label: 'Active Alerts', value: 0 },
+        ]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const stats = [
-    { label: 'Sermons', value: sermonsCount.count ?? 0 },
-    { label: 'Programs', value: programsCount.count ?? 0 },
-    { label: 'Gallery', value: galleryCount.count ?? 0 },
-    { label: 'Music', value: musicCount.count ?? 0 },
-    { label: 'Active Alerts', value: activeAlerts.count ?? 0 },
-  ];
+  if (stats === null) {
+    return (
+      <div className="empty-state">
+        <Loader2 className="empty-state-icon animate-spin" />
+        <p className="empty-state-title">Loading dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 py-4">

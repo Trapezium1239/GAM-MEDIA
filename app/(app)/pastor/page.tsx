@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
-import { Phone, User, Building2, ChevronRight } from 'lucide-react';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Phone, User, Building2, ChevronRight, Loader2 } from 'lucide-react';
 
 interface DirectoryItem {
   id: string;
@@ -16,15 +18,23 @@ const categoryMeta: Record<string, { label: string; icon: typeof Phone; color: s
   contact: { label: 'Contacts', icon: Phone, color: 'text-blue-400 bg-blue-500/10' },
 };
 
-export default async function PastorPage() {
-  const supabase = await createClient();
+export default function PastorPage() {
+  const [items, setItems] = useState<DirectoryItem[]>([]);
 
-  const { data } = await supabase
-    .from('church_directory')
-    .select('*')
-    .order('display_order', { ascending: true });
-
-  const items = (data ?? []) as DirectoryItem[];
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    supabase
+      .from('church_directory')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        if (!cancelled) setItems((data as DirectoryItem[]) || []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const grouped = (items || []).reduce((acc, item) => {
     const category = item.category;

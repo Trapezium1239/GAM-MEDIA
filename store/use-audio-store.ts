@@ -1,5 +1,6 @@
 'use client';
 import { create } from 'zustand';
+import { getNativeAudioUri } from '@/lib/audio-persistence';
 
 interface Track {
   id: string;
@@ -24,21 +25,34 @@ interface AudioState {
   setOfflineAudioUrl: (id: string, url: string) => void;
 }
 
+/** Push track metadata to the native Media Session (lock screen / background). */
+function publishMediaSession(track: Track) {
+  try {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    if (typeof MediaMetadata === 'undefined') return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: track.title,
+      artist: track.artist,
+      album: 'GAM Media Vault',
+    });
+  } catch {
+    // Media Session is progressive enhancement — never break playback
+  }
+}
+
 export const useAudioStore = create<AudioState>((set, get) => ({
   currentTrack: null,
   isPlaying: false,
   currentTime: 0,
   duration: 0,
   playTrack: (track) => {
-    const effectiveUrl = track.offlineAudioUrl || track.audioUrl;
-    set({ currentTrack: { ...track, audioUrl: effectiveUrl }, isPlaying: true, currentTime: 0 });
-    if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.title,
-        artist: track.artist,
-        album: 'GAM Media Vault',
-      });
-    }
+    // Prefer cached offline URL, then native file URI, then remote stream.
+    const nativeUri = getNativeAudioUri(track.id);
+    const effectiveUrl = track.offlineAudioUrl || nativeUri || track.audioUrl;
+    const next: Track = { ...track, audioUrl: effectiveUrl };
+    if (!track.offlineAudioUrl && nativeUri) next.offlineAudioUrl = nativeUri;
+    set({ currentTrack: next, isPlaying: true, currentTime: 0 });
+    publishMediaSession(next);
   },
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   stop: () => set({ currentTrack: null, isPlaying: false, currentTime: 0, duration: 0 }),

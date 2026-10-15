@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Search, X, Filter, ChevronDown, Loader2, Music, Calendar, BookOpen } from 'lucide-react';
 import { PlaySermonButton } from '@/components/audio/play-button';
+import { createClient } from '@/lib/supabase/client';
 
 interface SearchResult {
   id: string;
@@ -70,7 +71,7 @@ export function UnifiedSearch({
     });
   }, [initialResults, query, selectedTopic]);
 
-  // Server-side search
+  // MOBILE-ONLY: search runs directly against Supabase (no /api routes in static export)
   const performServerSearch = useCallback(async () => {
     if (!shouldUseServer || query.length < 2) {
       setServerResults(null);
@@ -81,20 +82,39 @@ export function UnifiedSearch({
     setSearchError(null);
 
     try {
-      const params = new URLSearchParams({
-        q: query,
-        type: type,
-        limit: '50',
-        offset: '0',
-      });
-      if (selectedTopic !== 'all') params.set('topic_id', selectedTopic);
+      const supabase = createClient();
+      const results: SearchResult[] = [];
+      const terms = query.split(' ').filter(Boolean);
+      const orSermons = terms.flatMap((t) => [`title.ilike.%${t}%`, `preacher.ilike.%${t}%`]).join(',');
+      const orMusic = terms.flatMap((t) => [`title.ilike.%${t}%`, `artist_choir.ilike.%${t}%`, `lyrics.ilike.%${t}%`]).join(',');
+      const orPrograms = terms.flatMap((t) => [`title.ilike.%${t}%`, `description.ilike.%${t}%`, `venue.ilike.%${t}%`]).join(',');
 
-      const res = await fetch(`/api/search?${params}`);
-      const data = await res.json();
+      if (type === 'sermons' || type === 'all') {
+        let q = supabase.from('sermons').select('id, title, preacher, date, audio_url, video_link, topic_id, topics(name, slug)').limit(50);
+        if (orSermons) q = q.or(orSermons);
+        if (selectedTopic !== 'all' && type === 'sermons') q = q.eq('topic_id', selectedTopic);
+        const { data, error } = await q;
+        if (error) throw new Error(error.message);
+        results.push(...((data || []) as unknown as SearchResult[]).map((r) => ({ ...r, _type: 'sermons' as const })));
+      }
 
-      if (!res.ok) throw new Error(data.error || 'Search failed');
+      if (type === 'music' || type === 'all') {
+        let qm = supabase.from('church_music').select('id, title, artist_choir, audio_url, release_date').limit(50);
+        if (orMusic) qm = qm.or(orMusic);
+        const { data, error } = await qm;
+        if (error) throw new Error(error.message);
+        results.push(...((data || []) as unknown as SearchResult[]).map((r) => ({ ...r, _type: 'music' as const })));
+      }
 
-      setServerResults(data.results || []);
+      if (type === 'programs' || type === 'all') {
+        let qp = supabase.from('programs').select('id, title, description, event_date, venue').limit(50);
+        if (orPrograms) qp = qp.or(orPrograms);
+        const { data, error } = await qp;
+        if (error) throw new Error(error.message);
+        results.push(...((data || []) as unknown as SearchResult[]).map((r) => ({ ...r, _type: 'programs' as const })));
+      }
+
+      setServerResults(results);
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : 'Search failed');
       setServerResults(null);

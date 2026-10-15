@@ -1,17 +1,36 @@
-import { createClient } from '@/lib/supabase/server';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { format } from 'date-fns';
-import { Calendar, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, BookOpen, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function DevotionalArchivePage() {
-  const supabase = await createClient();
+interface DevotionalRow {
+  id: string;
+  date: string;
+  title: string;
+  scripture_reference: string;
+}
 
-  const { data: devotionals } = await supabase
-    .from('daily_devotionals')
-    .select('*')
-    .lte('date', new Date().toISOString().split('T')[0])
-    .order('date', { ascending: false })
-    .limit(100);
+export default function DevotionalArchivePage() {
+  const [devotionals, setDevotionals] = useState<DevotionalRow[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    supabase
+      .from('daily_devotionals')
+      .select('id, date, title, scripture_reference')
+      .lte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: false })
+      .limit(100)
+      .then(({ data }) => {
+        if (!cancelled) setDevotionals((data as DevotionalRow[]) || []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-6 pb-32">
@@ -25,7 +44,12 @@ export default async function DevotionalArchivePage() {
         </div>
       </header>
 
-      {(!devotionals || devotionals.length === 0) ? (
+      {devotionals === null ? (
+        <div className="empty-state">
+          <Loader2 className="empty-state-icon animate-spin" />
+          <p className="empty-state-title">Loading archive...</p>
+        </div>
+      ) : devotionals.length === 0 ? (
         <div className="text-center py-16 text-zinc-500">
           <Calendar className="w-12 h-12 mx-auto mb-3 text-zinc-700" />
           <p className="text-sm">No devotionals yet</p>

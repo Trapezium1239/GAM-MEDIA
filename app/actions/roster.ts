@@ -1,5 +1,5 @@
-'use server'
-import { createClient } from '@/lib/supabase/server'
+// Client-side roster actions (no server runtime — static export).
+import { createClient } from '@/lib/supabase/client'
 import { ShiftSwapRequestSchema } from '@/lib/validations/schemas'
 
 export async function requestShiftSwap(formData: FormData) {
@@ -13,7 +13,7 @@ export async function requestShiftSwap(formData: FormData) {
     return { error: parsed.error.errors[0]?.message || 'Invalid input' }
   }
 
-  const supabase = await createClient()
+  const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Unauthorized' }

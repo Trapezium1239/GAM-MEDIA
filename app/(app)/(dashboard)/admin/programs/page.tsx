@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Plus, Calendar } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function AdminProgramsPage() {
   const [title, setTitle] = useState('');
@@ -20,20 +21,16 @@ export default function AdminProgramsPage() {
     setResult(null);
 
     try {
-      const res = await fetch('/api/admin/programs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          event_date: new Date(eventDate).toISOString(),
-          venue: venue.trim(),
-          flyer_url: flyerUrl.trim() || undefined,
-        }),
+      const supabase = createClient();
+      const { error } = await supabase.from('programs').insert({
+        title: title.trim(),
+        description: description.trim() || null,
+        event_date: new Date(eventDate).toISOString(),
+        venue: venue.trim(),
+        flyer_url: flyerUrl.trim() || null,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Failed to create program');
+      if (error) throw new Error(error.message || 'Failed to create program');
 
       setResult({ ok: true, msg: 'Program added!' });
       setTitle('');

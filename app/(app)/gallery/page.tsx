@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
-import { Image, Calendar, Tag } from 'lucide-react';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Image, Calendar, Tag, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import NextImage from 'next/image';
 
@@ -11,10 +13,23 @@ interface GalleryItem {
   created_at: string;
 }
 
-export default async function GalleryPage() {
-  const supabase = await createClient();
+export default function GalleryPage() {
+  const [items, setItems] = useState<GalleryItem[] | null>(null);
 
-  const { data: items } = await supabase.from('gallery_items').select('*').order('created_at', { ascending: false });
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    supabase
+      .from('gallery_items')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (!cancelled) setItems((data as GalleryItem[]) || []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-6 py-4 pb-32">
@@ -26,7 +41,12 @@ export default async function GalleryPage() {
         <p className="text-xs text-zinc-400 mt-1">Memories from our church family</p>
       </header>
 
-      {items && items.length > 0 ? (
+      {items === null ? (
+        <div className="empty-state">
+          <Loader2 className="empty-state-icon animate-spin" />
+          <p className="empty-state-title">Loading gallery...</p>
+        </div>
+      ) : items.length > 0 ? (
         <div className="grid grid-cols-2 gap-3">
           {items.map((item) => (
             <article key={item.id} className="card-compact overflow-hidden group">

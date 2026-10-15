@@ -1,8 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
-import { Suspense } from 'react';
+'use client';
+import { Suspense, useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { AlertTicker } from '@/components/alerts/alert-ticker';
 import { UrgentAlertModal } from '@/components/alerts/urgent-modal';
-import { Calendar, Music, Video, BookOpen, Users, Clock, ChevronRight, UserPlus, Home } from 'lucide-react';
+import { Calendar, Music, Video, BookOpen, Users, Clock, ChevronRight, UserPlus, Home, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -34,15 +35,41 @@ interface MusicTrack {
   audio_url: string;
 }
 
-export default async function AppHomePage() {
-  const supabase = await createClient();
+export default function AppHomePage() {
+  const [sermons, setSermons] = useState<Sermon[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [music, setMusic] = useState<MusicTrack[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: bundle } = await supabase.rpc('get_home_vault_bundle');
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    supabase
+      .rpc('get_home_vault_bundle')
+      .then(({ data: bundle }) => {
+        if (cancelled) return;
+        setSermons(((bundle as any)?.sermons || []) as Sermon[]);
+        setPrograms(((bundle as any)?.programs || []) as Program[]);
+        setMusic(((bundle as any)?.music || []) as MusicTrack[]);
+        setLoading(false);
+      }, () => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const sermons = ((bundle as any)?.sermons || []) as Sermon[];
-  const programs = ((bundle as any)?.programs || []) as Program[];
-  const music = ((bundle as any)?.music || []) as MusicTrack[];
   const hasContent = sermons.length > 0 || programs.length > 0 || music.length > 0;
+
+  if (loading) {
+    return (
+      <div className="empty-state">
+        <Loader2 className="empty-state-icon animate-spin" />
+        <p className="empty-state-title">Loading church content...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-32">

@@ -2,7 +2,35 @@
 import { useState } from 'react';
 import { useAudioStore } from '@/store/use-audio-store';
 import { Music, Pause, Download, Check, AlertCircle } from 'lucide-react';
-import { cacheAudio, isAudioCached, getCachedAudio } from '@/lib/offline-storage';
+import { getCachedAudio } from '@/lib/offline-storage';
+import { getNativeAudioUri } from '@/lib/audio-persistence';
+
+/** Shared native-aware download: Filesystem on device, IndexedDB on web. */
+export async function downloadTrackForOffline(
+  track: PlayTrackData,
+  setOfflineAudioUrl: (id: string, url: string) => void
+): Promise<void> {
+  const { downloadAudioToDevice } = await import('@/lib/native/audio-download');
+  const headRes = await fetch(track.audioUrl, { method: 'HEAD' }).catch(() => null);
+  const mimeType = headRes?.headers.get('content-type') || 'audio/mpeg';
+  const result = await downloadAudioToDevice(track.id, track.audioUrl, {
+    title: track.title,
+    artist: track.artist,
+    mimeType,
+  });
+  if (!result.ok) throw new Error(result.error || 'Download failed');
+  const playable = result.objectUrl || result.uri || getNativeAudioUri(track.id);
+  if (playable) {
+    setOfflineAudioUrl(track.id, playable);
+    return;
+  }
+  const cached = await getCachedAudio(track.id);
+  if (cached) {
+    setOfflineAudioUrl(track.id, cached.objectUrl);
+    return;
+  }
+  throw new Error('Could not prepare offline audio');
+}
 
 interface PlayTrackData {
   id: string;
@@ -28,25 +56,13 @@ export function PlaySermonButton({
   const isActive = currentTrack?.id === track.id;
   const isThisPlaying = isActive && isPlaying;
 
-  const handleDownload = async () => {
+  const handleDownloadSermon = async () => {
     if (downloaded || downloading) return;
     setDownloading(true);
     setDownloadError(null);
 
     try {
-      const response = await fetch(track.audioUrl);
-      if (!response.ok) throw new Error('Failed to fetch audio');
-      const blob = await response.blob();
-
-      await cacheAudio(track.id, blob, {
-        title: track.title,
-        artist: track.artist,
-        mimeType: blob.type,
-      });
-
-      const objectUrl = URL.createObjectURL(blob);
-      setOfflineAudioUrl(track.id, objectUrl);
-
+      await downloadTrackForOffline(track, setOfflineAudioUrl);
       setDownloaded(true);
       setDownloading(false);
     } catch (err) {
@@ -108,7 +124,7 @@ export function PlaySermonButton({
         )}
       </button>
       <button
-        onClick={downloaded ? undefined : (downloading ? undefined : handleDownload)}
+        onClick={downloaded ? undefined : (downloading ? undefined : handleDownloadSermon)}
         disabled={downloading}
         className={`px-3 py-2 text-xs font-medium rounded-lg transition touch-manipulation flex items-center gap-1.5 ${downloaded ? 'text-green-400 bg-green-500/10' : 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20'}`}
         aria-label={downloaded ? 'Downloaded' : downloading ? 'Downloading...' : 'Download for offline'}
@@ -149,25 +165,13 @@ export function PlayMusicButton({ track }: { track: PlayTrackData }) {
   const isActive = currentTrack?.id === track.id;
   const isThisPlaying = isActive && isPlaying;
 
-  const handleDownload = async () => {
+  const handleDownloadMusic = async () => {
     if (downloaded || downloading) return;
     setDownloading(true);
     setDownloadError(null);
 
     try {
-      const response = await fetch(track.audioUrl);
-      if (!response.ok) throw new Error('Failed to fetch audio');
-      const blob = await response.blob();
-
-      await cacheAudio(track.id, blob, {
-        title: track.title,
-        artist: track.artist,
-        mimeType: blob.type,
-      });
-
-      const objectUrl = URL.createObjectURL(blob);
-      setOfflineAudioUrl(track.id, objectUrl);
-
+      await downloadTrackForOffline(track, setOfflineAudioUrl);
       setDownloaded(true);
       setDownloading(false);
     } catch (err) {
@@ -231,7 +235,7 @@ export function PlayMusicButton({ track }: { track: PlayTrackData }) {
         </div>
       </button>
       <button
-        onClick={downloaded ? undefined : (downloading ? undefined : handleDownload)}
+        onClick={downloaded ? undefined : (downloading ? undefined : handleDownloadMusic)}
         disabled={downloading}
         className={`p-2 rounded-lg transition touch-manipulation flex items-center gap-1.5 ${downloaded ? 'text-green-400 bg-green-500/10' : 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20'}`}
         aria-label={downloaded ? 'Downloaded' : downloading ? 'Downloading...' : 'Download for offline'}

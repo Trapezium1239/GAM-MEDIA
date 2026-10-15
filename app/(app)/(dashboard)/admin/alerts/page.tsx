@@ -32,16 +32,18 @@ export default function AdminAlertsPage() {
     setResult(null);
 
     try {
-      const res = await fetch('/api/admin/broadcast-alert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, message, level, target_group: targetGroup }),
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { error } = await supabase.from('alerts').insert({
+        title,
+        message,
+        level,
+        target_group: targetGroup,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(typeof data.error === 'string' ? data.error : 'Broadcast failed');
+      if (error) {
+        throw new Error(error.message || 'Broadcast failed');
       }
 
       setResult({ ok: true, msg: 'Alert broadcasted successfully!' });

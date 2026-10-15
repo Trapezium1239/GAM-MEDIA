@@ -1,22 +1,41 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { ReactNode } from 'react';
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const [allowed, setAllowed] = useState(false);
 
-  if (!user) redirect('/login');
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!profile || !['admin', 'pastor'].includes(profile.role)) {
+        router.replace('/app');
+        return;
+      }
+      setAllowed(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || !['admin', 'pastor'].includes(profile.role)) {
-    redirect('/app');
-  }
+  if (!allowed) return null;
 
   return <div className="space-y-6 py-4">{children}</div>;
 }

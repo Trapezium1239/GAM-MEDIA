@@ -18,18 +18,15 @@ export default function AdminGalleryPage() {
     setResult(null);
 
     try {
-      const res = await fetch('/api/admin/gallery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim() || undefined,
-          image_url: imageUrl.trim(),
-          event_tag: eventTag.trim() || undefined,
-        }),
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { error } = await supabase.from('gallery_items').insert({
+        title: title.trim() || null,
+        image_url: imageUrl.trim(),
+        event_tag: eventTag.trim() || null,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Failed to add image');
+      if (error) throw new Error(error.message || 'Failed to add image');
 
       setResult({ ok: true, msg: 'Image added to gallery!' });
       setTitle('');
