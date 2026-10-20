@@ -55,9 +55,9 @@ This document is the **single source of truth** for all visual, architectural, a
 - **Forbidden:** UI component libraries, animation libraries, form libraries, fetch wrappers, date pickers, chart libraries.
 
 ### 2.2 Unified Data Fetching
-- **Server Components:** `lib/supabase/server.ts` → `createClient()` (async cookies).
+- **Server Components:** `lib/supabase/server.ts` → `createClient()` (async cookies). [Unused — static export has no SSR. Kept for reference only; no new code imports it.]
 - **Client Components:** `lib/supabase/client.ts` → `createBrowserClient()`.
-- **Middleware:** `lib/supabase/middleware.ts` → `createMiddlewareClient()`.
+- **Middleware:** None. `next.config.js` uses `output: 'export'` for a fully bundled mobile shell; Next static export does not execute Middleware. Auth/session enforcement is handled client-side via Supabase session state + `DeepLinkAuth`, plus Supabase RLS policies for all table reads/writes. `lib/supabase/middleware.ts` does not exist and must not be created.
 - **No `fetch()` in components.** No `useEffect` data fetching. No SWR/TanStack Query.
 - **Server Actions** for mutations (`app/actions/*.ts`).
 
@@ -108,8 +108,8 @@ Every async boundary must render:
 - **Migrations only.** No raw SQL in app code.
 
 ### 3.5 Auth & Guards
-- **Middleware:** `middleware.ts` refreshes session, guards `/admin/*` and `/dashboard/*`.
-- **Admin role:** `admin_users` table checked server-side.
+- **Auth guards:** Client-side via Supabase session state + `components/auth/deep-link-auth.tsx` (native `gami://auth-callback` cold/warm start). No root `middleware.ts` — `output: 'export'` cannot run it. Route protection enforced client-side at component boundaries; data access enforced server-side via Supabase RLS.
+- **Admin role:** Checked via RLS policies (`is_admin_or_pastor()`) + client-side guard on `/admin/*` pages.
 
 ### 3.6 Ingestion (One-Time)
 - **Script:** `scripts/ingest-telegram.ts` (Cheerio + music-metadata).

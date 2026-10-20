@@ -184,7 +184,7 @@ async function seedMockData() {
     const { error } = await supabase
       .from('devotionals')
       .upsert(dev, { onConflict: 'date' });
-    if (error) console.error(`Error seeding devotional \"${dev.title}\":`, error.message);
+    if (error) console.error(`Error seeding devotional "${dev.title}":`, error.message);
     else console.log(`✅ Devotional: ${dev.title}`);
   }
 
@@ -194,7 +194,7 @@ async function seedMockData() {
     const { error } = await supabase
       .from('daily_devotionals')
       .upsert(dev, { onConflict: 'date' });
-    if (error) console.error(`Error seeding daily devotional \"${dev.title}\":`, error.message);
+    if (error) console.error(`Error seeding daily devotional "${dev.title}":`, error.message);
     else console.log(`✅ Daily devotional: ${dev.title}`);
   }
 

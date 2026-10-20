@@ -85,7 +85,7 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-wine-600 px-5 py-2.5 text-sm font-semibold text-cream-50 transition-all duration-200 hover:bg-wine-700 hover:shadow-lg hover:shadow-wine-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-xl bg-wine-600 px-5 py-2.5 text-sm font-semibold text-cream-50 transition-colors duration-200 hover:bg-wine-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-500 focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-secondary {
@@ -97,7 +97,7 @@
   }
 
   .btn-accent {
-    @apply inline-flex items-center justify-center rounded-xl bg-wine-600 px-5 py-2.5 text-sm font-semibold text-cream-50 transition-all duration-300 hover:bg-wine-700 hover:shadow-lg hover:shadow-wine-600/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-400 focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-xl bg-wine-600 px-5 py-2.5 text-sm font-semibold text-cream-50 transition-colors duration-200 hover:bg-wine-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine-400 focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
   }
 
   .input-base {
@@ -109,7 +109,7 @@
   }
 
   .card {
-    @apply rounded-2xl border border-cream-300/60 bg-cream-100/80 p-5 shadow-sm shadow-wine-900/5 backdrop-blur-sm transition-all duration-300 hover:border-cream-400 hover:shadow-xl hover:shadow-wine-900/10;
+    @apply rounded-2xl border border-cream-300/60 bg-cream-100 p-5 shadow-sm transition-colors duration-200 hover:border-cream-400;
   }
 
   .card-interactive {
@@ -117,7 +117,7 @@
   }
 
   .card-compact {
-    @apply rounded-xl border border-cream-300/60 bg-cream-100/80 p-3 shadow-sm shadow-wine-900/5 backdrop-blur-sm transition-all duration-300 hover:border-cream-400 hover:shadow-lg;
+    @apply rounded-xl border border-cream-300/60 bg-cream-100 p-3 shadow-sm transition-colors duration-200 hover:border-cream-400;
   }
 
   .section-header {
