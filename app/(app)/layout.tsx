@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import '../globals.css';
 import { Suspense } from 'react';
 import { PersistentPlayer } from '@/components/audio/persistent-player';
+import { DeepLinkAuth } from '@/components/auth/deep-link-auth';
 import { NativeBootstrap } from '@/components/pwa/native-bootstrap';
 import { NativePushBootstrap } from '@/components/pwa/native-push-bootstrap';
 import { BottomNav } from '@/components/nav/bottom-nav';
@@ -39,6 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <CommandPalette />
           <ConnectivityIndicator />
           <NativeBootstrap />
+          <DeepLinkAuth />
           <NativePushBootstrap />
         </ToastProvider>
       </body>

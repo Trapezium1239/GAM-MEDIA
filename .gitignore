@@ -7,3 +7,9 @@ public/workbox-*.js
 .DS_Store
 .kilo
 *.tsbuildinfo
+out/
+build-out*.txt
+tsc-ref.txt
+cleanup-temp.ps1
+supabase/.temp/
+scripts/tmp-ebible/

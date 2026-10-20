@@ -20,8 +20,9 @@ export interface DevotionalContent {
   external_id?: string;
 }
 
-const ESV_API_KEY = process.env.ESV_API_KEY || '';
-const ESV_API_BASE = 'https://api.esv.org/v3';
+// NET Bible API (keyless, CORS-friendly) — works from the native webview
+// and from static exports. ESV was removed: it needs a secret key that a
+// client-only build cannot ship.
 const NET_API_BASE = 'https://labs.bible.org/api';
 
 /**
@@ -64,49 +65,6 @@ export function getDailyPassageReference(date: Date = new Date()): string {
 
   const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
   return passages[dayOfYear % passages.length] as string;
-}
-
-/**
- * Fetch passage from ESV API
- */
-export async function fetchESVPassage(reference: string): Promise<BiblePassageResponse | null> {
-  if (!process.env.ESV_API_KEY) return null;
-
-  try {
-    const params = new URLSearchParams({
-      q: reference,
-      'include-passage-references': 'true',
-      'include-first-verse-numbers': 'true',
-      'include-verse-numbers': 'true',
-      'include-footnotes': 'false',
-      'include-headings': 'false',
-      'include-subheadings': 'false',
-    });
-
-    const response = await fetch(`${ESV_API_BASE}/passage/text/?${params}`, {
-      headers: { Authorization: `Token ${process.env.ESV_API_KEY}` },
-    });
-
-    if (!response.ok) {
-      console.warn('[ESV API] Error:', response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    if (!data.passages || !data.passages.length) return null;
-
-    return {
-      reference: data.query || reference,
-      passages: data.passages.map((p: string) => ({
-        reference,
-        text: p.trim(),
-        translation: 'ESV',
-      })),
-    };
-  } catch (error) {
-    console.error('[ESV API] Fetch error:', error);
-    return null;
-  }
 }
 
 /**
@@ -206,16 +164,10 @@ export async function fetchTodaysDevotional(date: Date = new Date()): Promise<{
   external_id?: string;
 }> {
   const reference = getDailyPassageReference(date);
-  const todayStr = date.toISOString().split('T')[0];
 
-  // Try ESV first, then NET
-  let passageData: BiblePassageResponse | null = await fetchESVPassage(reference);
-  let source: 'auto_esv' | 'auto_net' = 'auto_esv';
-
-  if (!passageData) {
-    passageData = await fetchNETPassage(reference);
-    source = 'auto_net';
-  }
+  // NET API is keyless and CORS-friendly — safe for client-only builds.
+  let passageData: BiblePassageResponse | null = await fetchNETPassage(reference);
+  const source: 'auto_esv' | 'auto_net' = 'auto_net';
 
   // Fallback: generate from reference if both APIs fail
   if (!passageData) {
@@ -249,5 +201,3 @@ export async function fetchTodaysDevotional(date: Date = new Date()): Promise<{
     external_id: `${source}:${reference}:${date.toISOString().split('T')[0]}`,
   };
 }
-
-export { ESV_API_BASE, NET_API_BASE };

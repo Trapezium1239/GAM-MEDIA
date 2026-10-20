@@ -24,10 +24,15 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
+      // Native: magic links must return into the app via the custom
+      // `gami://` scheme (registered in AndroidManifest / Info.plist).
+      // Web: land back in-app on /app where detectSessionInUrl finishes.
+      const { Capacitor } = await import('@capacitor/core');
+      const isNative = Capacitor.isNativePlatform();
       const { error: authError } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/app`,
+          emailRedirectTo: isNative ? 'gami://auth-callback' : `${window.location.origin}/app`,
         },
       });
 

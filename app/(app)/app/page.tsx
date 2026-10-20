@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { AlertTicker } from '@/components/alerts/alert-ticker';
 import { UrgentAlertModal } from '@/components/alerts/urgent-modal';
-import { Calendar, Music, Video, BookOpen, Users, Clock, ChevronRight, UserPlus, Home, Loader2 } from 'lucide-react';
+import { Calendar, Music, Video, BookOpen, BookMarked, Users, Clock, ChevronRight, UserPlus, Home, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -116,6 +116,16 @@ export default function AppHomePage() {
             <span className="text-[10px] text-zinc-500">{sermons.length} recent</span>
           </div>
         </Link>
+        <Link href="/bible" className="card-interactive">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <BookMarked className="w-6 h-6 text-emerald-400" />
+            </div>
+            <span className="text-xs font-semibold text-white">Bible</span>
+            <span className="text-[10px] text-zinc-500">KJV & WEB</span>
+          </div>
+        </Link>
+
         <Link href="/music" className="card-interactive">
           <div className="flex flex-col items-center gap-2">
             <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">

@@ -184,8 +184,18 @@ async function seedMockData() {
     const { error } = await supabase
       .from('devotionals')
       .upsert(dev, { onConflict: 'date' });
-    if (error) console.error(`Error seeding devotional "${dev.title}":`, error.message);
+    if (error) console.error(`Error seeding devotional \"${dev.title}\":`, error.message);
     else console.log(`✅ Devotional: ${dev.title}`);
+  }
+
+  // Seed the daily-devotional table (used by the daily feed pages)
+  console.log('📖 Seeding daily devotionals...');
+  for (const dev of MOCK_DEVOTIONALS) {
+    const { error } = await supabase
+      .from('daily_devotionals')
+      .upsert(dev, { onConflict: 'date' });
+    if (error) console.error(`Error seeding daily devotional \"${dev.title}\":`, error.message);
+    else console.log(`✅ Daily devotional: ${dev.title}`);
   }
 
   console.log('\n✅ All mock data seeded successfully!');
