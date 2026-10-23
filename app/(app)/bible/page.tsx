@@ -29,6 +29,7 @@ export default function BiblePage() {
   const [bible, setBible] = useState<BibleJson | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   const [bookIndex, setBookIndex] = useState(42); // John
   const [chapter, setChapter] = useState(1);
@@ -44,8 +45,8 @@ export default function BiblePage() {
   const [highlightVerse, setHighlightVerse] = useState<number | null>(null);
   const chapterRef = useRef<HTMLDivElement | null>(null);
 
-  // Restore preferred translation.
   useEffect(() => {
+    setMounted(true);
     const saved = window.localStorage.getItem(STORAGE_KEY) as BibleTranslationId | null;
     if (saved && BIBLE_TRANSLATIONS.some((t) => t.id === saved)) setTranslation(saved);
   }, []);
@@ -85,17 +86,19 @@ export default function BiblePage() {
       setHighlightVerse(verse);
       setShowBookPicker(false);
       setPendingBook(null);
-      window.requestAnimationFrame(() => {
+      if (typeof window !== 'undefined') {
         window.requestAnimationFrame(() => {
-          if (verse != null) {
-            document
-              .getElementById(`verse-${verse}`)
-              ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-          } else {
-            chapterRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-          }
+          window.requestAnimationFrame(() => {
+            if (verse != null) {
+              document
+                .getElementById(`verse-${verse}`)
+                ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            } else {
+              chapterRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            }
+          });
         });
-      });
+      }
     },
     []
   );
@@ -129,19 +132,43 @@ export default function BiblePage() {
     void triggerHaptic('light');
     setSearching(true);
     // Yield a frame so the UI can show the searching state on long scans.
-    window.setTimeout(() => {
-      setResults(searchBible(bible, query));
-      setSearching(false);
-    }, 10);
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        setResults(searchBible(bible, query));
+        setSearching(false);
+      }, 10);
+    }
   };
 
   const switchTranslation = (id: BibleTranslationId) => {
     if (id === translation) return;
     void triggerHaptic('light');
-    window.localStorage.setItem(STORAGE_KEY, id);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, id);
+    }
     setTranslation(id);
     setResults(null);
   };
+
+  if (!mounted) {
+    return (
+      <div className="space-y-4 py-4 pb-32" ref={chapterRef}>
+        <header className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
+              <BookMarked className="w-6 h-6 text-wine-600" />
+              Holy Bible
+            </h1>
+            <p className="text-xs text-wine-500 mt-1">Loading...</p>
+          </div>
+        </header>
+        <div className="empty-state">
+          <Loader2 className="empty-state-icon animate-spin" />
+          <p className="empty-state-title">Loading Bible...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 py-4 pb-32" ref={chapterRef}>

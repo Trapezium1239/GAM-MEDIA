@@ -81,7 +81,7 @@ export default function MusicPage() {
           playlistId="PLEjZZqlkBhWs"
           title="GAM Worship & Praise"
           height={500}
-          autoplay={false}
+          autoplay={true}
         />
       </section>
     </div>

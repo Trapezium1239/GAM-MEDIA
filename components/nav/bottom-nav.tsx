@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, BookOpen, Music, Calendar, User, Heart } from 'lucide-react'
+import { Home, BookOpen, BookMarked, Music, Calendar, User, Heart } from 'lucide-react'
 import { triggerHaptic } from '@/lib/native/haptics'
 
 const navItems = [
   { href: '/app', label: 'Home', icon: Home },
+  { href: '/bible', label: 'Bible', icon: BookMarked },
   { href: '/sermons', label: 'Word', icon: BookOpen },
   { href: '/music', label: 'Music', icon: Music },
   { href: '/programs', label: 'Events', icon: Calendar },

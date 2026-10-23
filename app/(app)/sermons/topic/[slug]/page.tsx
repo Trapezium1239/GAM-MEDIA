@@ -1,15 +1,10 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useParams } from 'next/navigation';
-import { PlaySermonButton } from '@/components/audio/play-button';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { createStaticClient } from '@/lib/supabase/static';
+import { format } from 'date-fns';
+import { Calendar, BookOpen, Volume2, Play, Loader2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-
-interface Topic {
-  id: string;
-  name: string;
-}
+import { PlaySermonButton } from '@/components/audio/play-button';
 
 interface Sermon {
   id: string;
@@ -18,92 +13,144 @@ interface Sermon {
   date: string;
   audio_url: string | null;
   video_link: string | null;
+  topic_id: string | null;
 }
 
-export default function TopicSermonsPage() {
-  const params = useParams<{ slug: string }>();
-  const slug = params?.slug ?? '';
-  const [topic, setTopic] = useState<Topic | null>(null);
-  const [sermons, setSermons] = useState<Sermon[] | null>(null);
-  const [loading, setLoading] = useState(true);
+interface Topic {
+  id: string;
+  name: string;
+  slug: string;
+}
 
-  useEffect(() => {
-    if (!slug) return;
-    let cancelled = false;
-    const supabase = createClient();
-    (async () => {
-      const { data: topicRow } = await supabase.from('topics').select('id, name').eq('slug', slug).maybeSingle();
-      if (cancelled) return;
-      if (!topicRow) {
-        setTopic(null);
-        setLoading(false);
-        return;
-      }
-      setTopic(topicRow as Topic);
-      const { data: sermonRows } = await supabase
-        .from('sermons')
-        .select('*')
-        .eq('topic_id', (topicRow as Topic).id)
-        .order('date', { ascending: false });
-      if (cancelled) return;
-      setSermons((sermonRows as Sermon[]) || []);
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
+export async function generateStaticParams() {
+  const supabase = createStaticClient();
+  const { data } = await supabase
+    .from('topics')
+    .select('slug')
+    .order('name');
 
-  if (loading) {
-    return (
-      <div className="empty-state">
-        <Loader2 className="empty-state-icon animate-spin" />
-        <p className="empty-state-title">Loading series...</p>
-      </div>
-    );
+  if (!data || data.length === 0) {
+    // Fallback for empty database at build time
+    return [{ slug: 'general' }];
   }
+
+  return data.map((t) => ({
+    slug: t.slug,
+  }));
+}
+
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = createStaticClient();
+  const { data: topic } = await supabase
+    .from('topics')
+    .select('name')
+    .eq('slug', slug)
+    .single();
+
+  if (topic) {
+    return {
+      title: `${topic.name} Sermons | GAM Church`,
+      description: `Browse all sermons in the "${topic.name}" series`,
+    };
+  }
+  return {
+    title: 'Sermons by Topic | GAM Church',
+  };
+}
+
+interface SermonWithTopic extends Sermon {
+  topics: Topic | null;
+}
+
+export default async function SermonTopicPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const supabase = createStaticClient();
+
+  const { data: topic } = await supabase
+    .from('topics')
+    .select('*')
+    .eq('slug', slug)
+    .single();
 
   if (!topic) {
-    return (
-      <div className="empty-state">
-        <p className="text-sm text-zinc-400">Topic not found.</p>
-        <Link href="/sermons" className="btn-ghost text-xs mt-3">Back to Word Vault</Link>
-      </div>
-    );
+    notFound();
   }
 
+  const { data: sermons } = await supabase
+    .from('sermons')
+    .select('*, topics(name, slug)')
+    .eq('topic_id', topic.id)
+    .order('date', { ascending: false });
+
   return (
-    <div className="space-y-4 py-4">
-      <div>
-        <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Series / Topic</span>
-        <h1 className="text-xl font-bold text-white">{topic.name}</h1>
-      </div>
-      <div className="space-y-3">
-        {sermons?.map((sermon) => (
-          <article key={sermon.id} className="card space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">{sermon.date} • {sermon.preacher}</p>
-                <h2 className="text-sm font-semibold text-white">{sermon.title}</h2>
+    <div className="space-y-6 py-4 pb-32">
+      <header>
+        <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
+          <BookOpen className="w-6 h-6 text-wine-600" />
+          {topic.name}
+        </h1>
+        <p className="text-xs text-wine-500 mt-1">Sermons in this series</p>
+      </header>
+
+      {(sermons || []).length > 0 ? (
+        <div className="space-y-3">
+          {(sermons as SermonWithTopic[]).map((sermon) => (
+            <article key={sermon.id} className="card space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-wine-100 flex items-center justify-center flex-shrink-0">
+                  <Volume2 className="w-5 h-5 text-wine-700" aria-hidden="true" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-wine-900 truncate">{sermon.title}</h3>
+                  <p className="text-xs text-wine-500">
+                    {sermon.preacher} · {format(new Date(sermon.date), 'MMM d, yyyy')}
+                  </p>
+                </div>
               </div>
-              {sermon.audio_url && (
-                <PlaySermonButton
-                  track={{ id: sermon.id, title: sermon.title, artist: sermon.preacher, audioUrl: sermon.audio_url }}
-                />
-              )}
-            </div>
-            {sermon.video_link && (
-              <Link href={sermon.video_link} target="_blank" rel="noopener noreferrer" className="text-xs text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
-                Watch Video <ChevronRight className="w-3 h-3" />
-              </Link>
-            )}
-          </article>
-        ))}
-        {(!sermons || sermons.length === 0) && (
-          <div className="empty-state py-8">
-            <p className="text-xs text-zinc-500">No sermons logged under this topic yet.</p>
-          </div>
-        )}
+              <div className="flex items-center gap-2 pt-2 border-t border-cream-300">
+                {sermon.audio_url && (
+                  <PlaySermonButton
+                    track={{
+                      id: sermon.id,
+                      title: sermon.title,
+                      artist: sermon.preacher,
+                      audioUrl: sermon.audio_url,
+                    }}
+                  />
+                )}
+                {sermon.video_link && (
+                  <a
+                    href={sermon.video_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-ghost text-xs flex items-center gap-1"
+                  >
+                    <span className="w-3.5 h-3.5">▶</span>
+                    Watch Video
+                  </a>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <BookOpen className="empty-state-icon" />
+          <p className="empty-state-title">No Sermons in This Series</p>
+          <p className="empty-state-desc">Sermons will appear here once added</p>
+        </div>
+      )}
+
+      <div className="mt-6">
+        <Link href="/sermons" className="btn-ghost flex items-center gap-1.5">
+          <span className="w-4 h-4">←</span>
+          All Sermons
+        </Link>
       </div>
     </div>
   );

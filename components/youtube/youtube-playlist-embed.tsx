@@ -15,10 +15,10 @@ export function YouTubePlaylistEmbed({
   playlistId, 
   title = 'GAM Music Playlist',
   height = 400,
-  autoplay = false,
+  autoplay = true,
   showControls = true
 }: YouTubePlaylistEmbedProps) {
-  const [isMuted, setIsMuted] = useState(!autoplay);
+  const [isMuted, setIsMuted] = useState(autoplay);
   const [iframeReady, setIframeReady] = useState(false);
 
   const embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=${autoplay ? 1 : 0}&mute=${autoplay ? 1 : 0}&controls=${showControls ? 1 : 0}&modestbranding=1&rel=0&playsinline=1`;

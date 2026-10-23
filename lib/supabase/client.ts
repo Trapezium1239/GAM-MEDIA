@@ -2,12 +2,12 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createMockClient, isSupabaseConfigured, warnMissingSupabaseConfig } from './mock'
 
 export function createClient(): SupabaseClient {
-  if (!isSupabaseConfigured()) {
-    warnMissingSupabaseConfig()
-    return createMockClient()
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error(
+      '[supabase] Missing Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local. Mock data is not supported.'
+    )
   }
 
   return createBrowserClient(
