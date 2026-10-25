@@ -85,15 +85,15 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-3 gap-3 pt-3 border-t border-zinc-800">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Role</p>
+            <p className="text-xs uppercase tracking-wider text-zinc-500">Role</p>
             <p className="text-sm font-medium text-white capitalize">{profile?.role || 'member'}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Group</p>
+            <p className="text-xs uppercase tracking-wider text-zinc-500">Group</p>
             <p className="text-sm font-medium text-white capitalize">{profile?.church_group || 'general'}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Lite Mode</p>
+            <p className="text-xs uppercase tracking-wider text-zinc-500">Lite Mode</p>
             <p className="text-sm font-medium text-white">{profile?.lite_mode ? 'On' : 'Off'}</p>
           </div>
         </div>

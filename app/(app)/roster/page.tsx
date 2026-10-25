@@ -158,7 +158,7 @@ export default function RosterPage() {
                     </p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${statusColors[shift.status] || 'text-zinc-500'}`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[shift.status] || 'text-zinc-500'}`}>
                   {shift.status.replace('_', ' ')}
                 </span>
               </div>

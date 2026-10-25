@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Target, TrendingUp, Calendar, ChevronRight, DollarSign, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
+import { Target, TrendingUp, Calendar, ChevronRight, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface Milestone {
@@ -108,11 +108,11 @@ export default function ProjectsPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${config.color}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
                               {config.label}
                             </span>
                             {isOverdue && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium text-red-400 bg-red-500/10">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium text-red-400 bg-red-500/10">
                                 Overdue
                               </span>
                             )}
@@ -125,7 +125,7 @@ export default function ProjectsPage() {
                         {milestone.target_amount > 0 && (
                           <div className="w-32 text-right flex-shrink-0">
                             <p className="text-sm font-bold text-white">{formatCurrency(milestone.current_amount)}</p>
-                            <p className="text-[10px] text-zinc-500">of {formatCurrency(milestone.target_amount)}</p>
+                            <p className="text-xs text-zinc-500">of {formatCurrency(milestone.target_amount)}</p>
                           </div>
                         )}
                       </div>
@@ -140,7 +140,7 @@ export default function ProjectsPage() {
                               style={{ width: `${progress}%` }}
                             />
                           </div>
-                          <div className="flex items-center justify-between text-[10px] text-zinc-500">
+                          <div className="flex items-center justify-between text-xs text-zinc-500">
                             <span>{progress}% funded</span>
                             {milestone.target_date && (
                               <span className="flex items-center gap-1">

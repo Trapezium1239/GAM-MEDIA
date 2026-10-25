@@ -66,7 +66,7 @@ export default function GalleryPage() {
                 {item.title && (
                   <h3 className="text-sm font-semibold text-white line-clamp-1">{item.title}</h3>
                 )}
-                <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-2.5 h-2.5" />
                     {format(new Date(item.created_at), 'MMM d, yyyy')}
