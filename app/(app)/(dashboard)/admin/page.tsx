@@ -76,7 +76,7 @@ export default function AdminOverviewPage() {
         {stats.map((stat) => (
           <div key={stat.label} className="p-4 rounded-xl bg-zinc-900 border border-zinc-800">
             <p className="text-2xl font-bold text-white">{stat.value}</p>
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500 mt-1">{stat.label}</p>
+            <p className="text-xs uppercase tracking-wider text-zinc-500 mt-1">{stat.label}</p>
           </div>
         ))}
       </div>

@@ -216,7 +216,7 @@ export function PersistentPlayer() {
         />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-wine-900 truncate">{currentTrack.title}</p>
-          <p className="text-[10px] text-wine-500 truncate">
+          <p className="text-xs text-wine-500 truncate">
             {currentTrack.artist}
             {offline ? ' · Offline' : ''}
           </p>

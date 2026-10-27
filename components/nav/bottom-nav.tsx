@@ -41,7 +41,7 @@ export function BottomNav() {
               aria-current={isActive ? 'page' : undefined}
             >
               <Icon className="w-5 h-5" aria-hidden="true" />
-              <span className="text-[10px] font-semibold tracking-wide">{item.label}</span>
+              <span className="text-xs font-semibold tracking-wide">{item.label}</span>
             </Link>
           )
         })}

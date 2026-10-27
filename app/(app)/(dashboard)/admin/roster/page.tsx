@@ -133,7 +133,7 @@ export default function AdminRosterPage() {
             className="input-base"
             required
           />
-          <p className="text-[10px] text-zinc-600">Enter the member's UUID from profiles table</p>
+          <p className="text-xs text-zinc-600">Enter the member's UUID from profiles table</p>
         </div>
 
         {result && (

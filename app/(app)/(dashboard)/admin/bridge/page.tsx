@@ -66,11 +66,11 @@ export default function AdminBridgePage() {
       <div className="grid grid-cols-2 gap-3">
         <div className="p-4 rounded-xl bg-cream-100 border border-cream-300/60">
           <p className="text-2xl font-bold text-wine-900">{rows.length}</p>
-          <p className="text-[10px] uppercase tracking-wider text-wine-500 mt-1">Channels</p>
+          <p className="text-xs uppercase tracking-wider text-wine-500 mt-1">Channels</p>
         </div>
         <div className="p-4 rounded-xl bg-cream-100 border border-cream-300/60">
           <p className="text-2xl font-bold text-wine-900">{activeCount}</p>
-          <p className="text-[10px] uppercase tracking-wider text-wine-500 mt-1">Active</p>
+          <p className="text-xs uppercase tracking-wider text-wine-500 mt-1">Active</p>
         </div>
       </div>
 
@@ -109,9 +109,9 @@ export default function AdminBridgePage() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-wine-900 capitalize">{ch.platform}</p>
                 <p className="text-xs text-wine-500 truncate font-mono">{ch.channel_id}</p>
-                <p className="text-[10px] text-wine-500">Added {format(new Date(ch.created_at), 'MMM d, yyyy')}</p>
+                <p className="text-xs text-wine-500">Added {format(new Date(ch.created_at), 'MMM d, yyyy')}</p>
               </div>
-              <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${ch.is_active ? 'bg-green-500/10 text-green-700' : 'bg-cream-200/70 text-cream-600'}`}>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${ch.is_active ? 'bg-green-500/10 text-green-700' : 'bg-cream-200/70 text-cream-600'}`}>
                 {ch.is_active ? 'Active' : 'Paused'}
               </span>
             </article>

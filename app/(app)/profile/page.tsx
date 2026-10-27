@@ -14,7 +14,7 @@ interface ProfileRow {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
@@ -57,7 +57,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="empty-state">
-        <Loader2 className="empty-state-icon animate-spin" />
+        <Loader2 className="empty-state-icon animate-spin" aria-hidden="true" />
         <p className="empty-state-title">Loading profile...</p>
       </div>
     );
@@ -75,7 +75,7 @@ export default function ProfilePage() {
       <div className="p-5 rounded-2xl bg-zinc-900 border border-zinc-800/60 space-y-4 card">
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
-            <User className="w-7 h-7 text-primary" />
+            <User className="w-7 h-7 text-primary" aria-hidden="true" />
           </div>
           <div className="min-w-0">
             <p className="font-semibold text-white truncate">{profile?.full_name || 'Member'}</p>
@@ -105,10 +105,10 @@ export default function ProfilePage() {
           className="card-compact flex items-center gap-3 touch-manipulation text-left"
         >
           <span className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Users className="w-5 h-5 text-primary" />
+            <Users className="w-5 h-5 text-primary" aria-hidden="true" />
           </span>
           <span className="flex-1 text-sm font-medium text-white">Give & Support</span>
-          <ChevronRight className="w-4 h-4 text-zinc-600" />
+          <ChevronRight className="w-4 h-4 text-zinc-600" aria-hidden="true" />
         </Link>
 
         <Link
@@ -116,10 +116,10 @@ export default function ProfilePage() {
           className="card-compact flex items-center gap-3 touch-manipulation text-left"
         >
           <span className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-emerald-400" />
+            <Shield className="w-5 h-5 text-emerald-400" aria-hidden="true" />
           </span>
           <span className="flex-1 text-sm font-medium text-white">Church Directory</span>
-          <ChevronRight className="w-4 h-4 text-zinc-600" />
+          <ChevronRight className="w-4 h-4 text-zinc-600" aria-hidden="true" />
         </Link>
 
         {isAdmin && (
@@ -128,10 +128,10 @@ export default function ProfilePage() {
             className="card-compact flex items-center gap-3 border border-primary/30 touch-manipulation text-left hover:border-primary/50 transition"
           >
             <span className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-red-400" />
+              <Shield className="w-5 h-5 text-red-400" aria-hidden="true" />
             </span>
             <span className="flex-1 text-sm font-medium text-white">Admin Dashboard</span>
-            <ChevronRight className="w-4 h-4 text-zinc-600" />
+            <ChevronRight className="w-4 h-4 text-zinc-600" aria-hidden="true" />
           </Link>
         )}
 
@@ -140,10 +140,10 @@ export default function ProfilePage() {
           className="card-compact flex items-center gap-3 touch-manipulation text-left"
         >
           <span className="w-10 h-10 rounded-xl bg-zinc-800/10 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-zinc-400" />
+            <FileText className="w-5 h-5 text-zinc-400" aria-hidden="true" />
           </span>
           <span className="flex-1 text-sm font-medium text-white">Privacy Policy</span>
-          <ChevronRight className="w-4 h-4 text-zinc-600" />
+          <ChevronRight className="w-4 h-4 text-zinc-600" aria-hidden="true" />
         </Link>
       </nav>
 
@@ -153,7 +153,7 @@ export default function ProfilePage() {
         disabled={signingOut}
         className="btn-secondary w-full flex items-center justify-center gap-2"
       >
-        <LogOut className="w-4 h-4" />
+        <LogOut className="w-4 h-4" aria-hidden="true" />
         {signingOut ? 'Signing Out...' : 'Sign Out'}
       </button>
     </div>

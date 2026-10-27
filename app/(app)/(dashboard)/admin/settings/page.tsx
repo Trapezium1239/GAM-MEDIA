@@ -184,7 +184,7 @@ export default function AdminSettingsPage() {
             {items.map((item) => (
               <div key={item.id} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-zinc-500">{item.category.replace('_', ' ')}</p>
+                  <p className="text-xs uppercase tracking-wider text-zinc-500">{item.category.replace('_', ' ')}</p>
                   <p className="text-sm font-medium text-white truncate">{item.title}</p>
                   <p className="text-xs text-zinc-400 truncate">{item.detail_value}</p>
                 </div>

@@ -146,7 +146,7 @@ export function PlaySermonButton({
         <span>{downloaded ? 'Saved' : 'Save'}</span>
       </button>
       {downloadError && (
-        <span className="text-[10px] text-wine-700" role="alert">
+        <span className="text-xs text-wine-700" role="alert">
           {downloadError}
         </span>
       )}
@@ -186,16 +186,16 @@ export function PlayMusicButton({ track }: { track: PlayTrackData }) {
           aria-label={downloaded ? 'Saved offline' : downloading ? 'Saving' : 'Save for offline'}
         >
           {downloading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           ) : downloaded ? (
-            <Check className="w-4 h-4" />
+            <Check className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
       </div>
       {downloadError && (
-        <p className="text-[10px] text-wine-700" role="alert">
+        <p className="text-xs text-wine-700" role="alert">
           {downloadError}
         </p>
       )}

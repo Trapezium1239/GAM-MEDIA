@@ -57,8 +57,7 @@ export default function GivingPage() {
   return (
     <div className="space-y-6 py-4 pb-32">
       {/* Official Bank Details - Prominent & Copiable */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-zinc-900/50 to-zinc-950 border border-amber-500/20 p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(245,158,11,0.15),_transparent)]" />
+      <section className="relative overflow-hidden rounded-2xl bg-zinc-900/50 border border-amber-500/20 p-6">
         <div className="relative">
           {/* Alert Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-medium mb-4">

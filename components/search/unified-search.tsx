@@ -220,7 +220,7 @@ export function UnifiedSearch({
       <div className="flex items-center justify-between text-xs text-zinc-500">
         <span>
           {filteredCount} of {totalCount} {type === 'all' ? 'items' : type}
-          {isUsingServer && <span className="ml-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded text-[10px]">Server</span>}
+          {isUsingServer && <span className="ml-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded text-xs">Server</span>}
         </span>
         {(query || selectedTopic !== 'all') && (
           <button
@@ -251,7 +251,7 @@ export function UnifiedSearch({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-white truncate">{result.title}</h3>
-                  <span className="text-[10px] px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-500">
+                  <span className="text-xs px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-500">
                     {getTypeLabel(result._type)}
                   </span>
                 </div>

@@ -71,7 +71,7 @@ export default function DevotionalArchivePage() {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{devotional.title}</p>
                     <p className="text-xs text-amber-400">{devotional.scripture_reference}</p>
-                    <p className="text-[10px] text-zinc-500">{format(date, 'EEEE, MMMM d, yyyy')}</p>
+                    <p className="text-xs text-zinc-500">{format(date, 'EEEE, MMMM d, yyyy')}</p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-zinc-500 flex-shrink-0" />

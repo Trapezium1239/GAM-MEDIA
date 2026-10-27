@@ -18,14 +18,22 @@ export default function GalleryPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const supabase = createClient();
-    supabase
-      .from('gallery_items')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        if (!cancelled) setItems((data as GalleryItem[]) || []);
-      });
+    const fetchGallery = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('gallery_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!cancelled) {
+        if (error) {
+          console.error('Gallery fetch error:', error);
+          setItems([]);
+        } else {
+          setItems((data as GalleryItem[]) || []);
+        }
+      }
+    };
+    fetchGallery();
     return () => {
       cancelled = true;
     };
@@ -35,7 +43,7 @@ export default function GalleryPage() {
     <div className="space-y-6 py-4 pb-32">
       <header>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Image className="w-6 h-6 text-purple-400" />
+          <Image className="w-6 h-6 text-purple-400" aria-hidden="true" />
           Gallery
         </h1>
         <p className="text-xs text-zinc-400 mt-1">Memories from our church family</p>
@@ -43,7 +51,7 @@ export default function GalleryPage() {
 
       {items === null ? (
         <div className="empty-state">
-          <Loader2 className="empty-state-icon animate-spin" />
+          <Loader2 className="empty-state-icon animate-spin" aria-hidden="true" />
           <p className="empty-state-title">Loading gallery...</p>
         </div>
       ) : items.length > 0 ? (
@@ -68,12 +76,12 @@ export default function GalleryPage() {
                 )}
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-2.5 h-2.5" />
+                    <Calendar className="w-2.5 h-2.5" aria-hidden="true" />
                     {format(new Date(item.created_at), 'MMM d, yyyy')}
                   </span>
                   {item.event_tag && (
                     <span className="flex items-center gap-1 px-2 py-0.5 bg-zinc-800 rounded">
-                      <Tag className="w-2.5 h-2.5" />
+                      <Tag className="w-2.5 h-2.5" aria-hidden="true" />
                       {item.event_tag}
                     </span>
                   )}
@@ -84,7 +92,7 @@ export default function GalleryPage() {
         </div>
       ) : (
         <div className="empty-state">
-          <Image className="empty-state-icon" />
+          <Image className="empty-state-icon" aria-hidden="true" />
           <p className="empty-state-title">No gallery images yet</p>
         </div>
       )}

@@ -33,18 +33,17 @@ export function OfficialBankDetails({
   };
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-zinc-900/50 to-zinc-950 border border-amber-500/20 p-6 md:p-8">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(245,158,11,0.15),_transparent)]" />
+    <section className="relative overflow-hidden rounded-2xl bg-zinc-900/50 border border-amber-500/20 p-6 md:p-8">
       <div className="relative max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-medium mb-6">
-          <span className="w-3.5 h-3.5 flex-shrink-0">🏦</span>
+          <Landmark className="w-3.5 h-3.5 flex-shrink-0" />
           Give & Support — Official Bank Details
         </div>
 
         <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <span className="w-7 h-7 text-amber-400">🏦</span>
+              <Landmark className="w-7 h-7 text-amber-400" />
             </div>
             <div>
               <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Bank</p>

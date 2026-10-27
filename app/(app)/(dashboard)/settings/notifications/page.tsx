@@ -156,7 +156,7 @@ export default function NotificationsSettingsPage() {
               </p>
             </div>
           </div>
-          <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
             pushSupported ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'
           }`}>
             {pushSupported ? 'Available' : 'Unavailable'}
@@ -229,7 +229,7 @@ export default function NotificationsSettingsPage() {
                       <div>
                         <p className="text-sm font-semibold text-white">Subscribed Device</p>
                         <p className="text-xs text-zinc-500 truncate max-w-[200px]">{sub.user_agent}</p>
-                        <p className="text-[10px] text-zinc-500">{new Date(sub.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-zinc-500">{new Date(sub.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <button
@@ -274,8 +274,8 @@ export default function NotificationsSettingsPage() {
         <p className="text-xs text-zinc-400">Choose which alerts trigger push notifications</p>
         <div className="space-y-2">
           {[
-            { key: 'urgent', label: 'Urgent Broadcasts (🔴)', description: 'Immediate safety/critical alerts', default: true },
-            { key: 'advisory', label: 'Advisory Alerts (🟡)', description: 'Service changes, weather advisories', default: true },
+            { key: 'urgent', label: 'Urgent Broadcasts', description: 'Immediate safety/critical alerts', default: true },
+            { key: 'advisory', label: 'Advisory Alerts', description: 'Service changes, weather advisories', default: true },
             { key: 'shift_reminder', label: 'Shift Reminders', description: '24h before your scheduled shifts', default: true },
             { key: 'first_timer', label: 'First-Timer Alerts', description: 'New visitor check-ins', default: false },
             { key: 'milestone_update', label: 'Project Milestone Updates', description: 'Funding progress & completions', default: false },

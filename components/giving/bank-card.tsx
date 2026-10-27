@@ -48,7 +48,7 @@ export function CopyButton({ title, value, meta }: CopyButtonProps) {
           {copied ? <Check className="w-5 h-5" /> : <Copy className="w-4 h-4" />}
         </div>
       </div>
-      <p className={`text-[10px] mt-2 transition-colors ${copied ? 'text-green-400' : 'text-zinc-600'}`}>
+      <p className={`text-xs mt-2 transition-colors ${copied ? 'text-green-400' : 'text-zinc-600'}`}>
         {copied ? 'Account number copied!' : 'Tap to copy'}
       </p>
     </button>

@@ -162,7 +162,7 @@ export default async function DevotionalDatePage({ params }: Props) {
       </nav>
 
       {/* Source Attribution */}
-      <footer className="text-center text-[10px] text-wine-500 pt-6 border-t border-cream-300/60">
+      <footer className="text-center text-xs text-wine-500 pt-6 border-t border-cream-300/60">
         <p>Scripture: {devotional.source === 'auto_esv' ? 'ESV' : devotional.source === 'auto_net' ? 'NET' : 'Manual'}</p>
         <p className="mt-1">
           {devotional.created_at ? `Published: ${format(new Date(devotional.published_at || devotional.created_at), 'MMMM d, yyyy')}` : ''}

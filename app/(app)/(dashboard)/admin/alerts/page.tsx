@@ -92,7 +92,7 @@ export default function AdminAlertsPage() {
             maxLength={500}
             required
           />
-          <p className="text-[10px] text-zinc-600 text-right">{message.length}/500</p>
+          <p className="text-xs text-zinc-600 text-right">{message.length}/500</p>
         </div>
 
         <div className="space-y-1.5">

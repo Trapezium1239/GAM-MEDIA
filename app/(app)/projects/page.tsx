@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Target, TrendingUp, Calendar, ChevronRight, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
+import { Target, TrendingUp, Calendar, ChevronRight, DollarSign, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface Milestone {
@@ -19,10 +19,10 @@ interface Milestone {
 }
 
 const statusConfig = {
-  planned: { icon: <Clock className="w-4 h-4" />, color: 'text-blue-400 bg-blue-500/10', label: 'Planned' },
-  in_progress: { icon: <TrendingUp className="w-4 h-4" />, color: 'text-amber-400 bg-amber-500/10', label: 'In Progress' },
-  completed: { icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-green-400 bg-green-500/10', label: 'Completed' },
-  paused: { icon: <AlertTriangle className="w-4 h-4" />, color: 'text-red-400 bg-red-500/10', label: 'Paused' },
+  planned: { icon: <Clock className="w-4 h-4" aria-hidden="true" />, color: 'text-blue-400 bg-blue-500/10', label: 'Planned' },
+  in_progress: { icon: <TrendingUp className="w-4 h-4" aria-hidden="true" />, color: 'text-amber-400 bg-amber-500/10', label: 'In Progress' },
+  completed: { icon: <CheckCircle2 className="w-4 h-4" aria-hidden="true" />, color: 'text-green-400 bg-green-500/10', label: 'Completed' },
+  paused: { icon: <AlertTriangle className="w-4 h-4" aria-hidden="true" />, color: 'text-red-400 bg-red-500/10', label: 'Paused' },
 }
 
 export default function ProjectsPage() {
@@ -31,17 +31,36 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
     const fetchMilestones = async () => {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('project_milestones')
-        .select('*')
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: true })
-      setMilestones(data || [])
-      setLoading(false)
+      try {
+        const { data, error } = await supabase
+          .from('project_milestones')
+          .select('*')
+          .order('display_order', { ascending: true })
+          .order('created_at', { ascending: true })
+        if (!cancelled) {
+          if (error) {
+            console.error('Projects fetch error:', error)
+            setMilestones([])
+          } else {
+            setMilestones(data || [])
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Projects fetch failed:', error)
+          setMilestones([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
     fetchMilestones()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const getProgress = (current: number, target: number) => {
@@ -58,7 +77,7 @@ export default function ProjectsPage() {
   }
 
   if (loading) {
-    return <div className="empty-state"><Target className="empty-state-icon" /><p className="empty-state-title">Loading projects...</p></div>
+    return <div className="empty-state"><Target className="empty-state-icon" aria-hidden="true" /><p className="empty-state-title">Loading projects...</p></div>
   }
 
   const grouped = milestones.reduce((acc, m) => {
@@ -74,7 +93,7 @@ export default function ProjectsPage() {
     <div className="space-y-6 py-4 pb-32">
       <header>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Target className="w-6 h-6 text-primary" />
+          <Target className="w-6 h-6 text-primary" aria-hidden="true" />
           Project Milestone Tracker
         </h1>
         <p className="text-xs text-zinc-400 mt-1">Transparent funding progress for church projects</p>
@@ -82,7 +101,7 @@ export default function ProjectsPage() {
 
       {!hasMilestones ? (
         <div className="empty-state">
-          <Target className="empty-state-icon" />
+          <Target className="empty-state-icon" aria-hidden="true" />
           <p className="empty-state-title">No projects yet</p>
           <p className="empty-state-desc">Milestones will appear here when created by leadership</p>
         </div>
@@ -92,13 +111,15 @@ export default function ProjectsPage() {
             <section key={category} className="space-y-3">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-300 uppercase tracking-wider">
                 <span className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                  <DollarSign className="w-4 h-4 text-primary" />
+                  <DollarSign className="w-4 h-4 text-primary" aria-hidden="true" />
                 </span>
                 {category}
               </h2>
               <div className="space-y-3">
                 {items.map((milestone) => {
-                  const status = milestone.status as keyof typeof statusConfig
+                  const status = milestone.status in statusConfig
+                    ? (milestone.status as keyof typeof statusConfig)
+                    : 'planned'
                   const config = statusConfig[status] ?? statusConfig.planned
                   const progress = getProgress(milestone.current_amount, milestone.target_amount)
                   const isOverdue = milestone.target_date && new Date(milestone.target_date) < new Date() && milestone.status !== 'completed'
@@ -144,7 +165,7 @@ export default function ProjectsPage() {
                             <span>{progress}% funded</span>
                             {milestone.target_date && (
                               <span className="flex items-center gap-1">
-                                <Calendar className="w-2.5 h-2.5" />
+                                <Calendar className="w-2.5 h-2.5" aria-hidden="true" />
                                 Target: {format(new Date(milestone.target_date), 'MMM d, yyyy')}
                               </span>
                             )}
@@ -157,7 +178,7 @@ export default function ProjectsPage() {
                           onClick={() => router.push(`/projects/${milestone.id}`)}
                           className="flex-1 py-2 text-xs font-medium text-primary bg-primary/10 rounded-lg text-center hover:bg-primary/20 transition touch-manipulation"
                         >
-                          View Details <ChevronRight className="w-3 h-3 inline ml-1" />
+                          View Details <ChevronRight className="w-3 h-3 inline ml-1" aria-hidden="true" />
                         </button>
                       </div>
                     </article>

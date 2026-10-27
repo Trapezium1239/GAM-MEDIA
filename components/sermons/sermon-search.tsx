@@ -212,7 +212,7 @@ export function SermonSearch({
       <div className="flex items-center justify-between text-xs text-zinc-500">
         <span>
           {filteredCount} of {totalCount} sermons
-          {isUsingServer && <span className="ml-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded text-[10px]">Server</span>}
+          {isUsingServer && <span className="ml-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded text-xs">Server</span>}
         </span>
         {(debouncedQuery || selectedTopic !== 'all') && (
           <button

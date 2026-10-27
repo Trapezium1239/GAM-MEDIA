@@ -76,15 +76,15 @@ export default function AdminFirstTimersPage() {
       <div className="grid grid-cols-3 gap-3">
         <div className="p-4 rounded-xl bg-cream-100 border border-cream-300/60">
           <p className="text-2xl font-bold text-wine-900">{rows.length}</p>
-          <p className="text-[10px] uppercase tracking-wider text-wine-500 mt-1 flex items-center gap-1"><Users className="w-3 h-3" />Total</p>
+          <p className="text-xs uppercase tracking-wider text-wine-500 mt-1 flex items-center gap-1"><Users className="w-3 h-3" />Total</p>
         </div>
         <div className="p-4 rounded-xl bg-cream-100 border border-cream-300/60">
           <p className="text-2xl font-bold text-wine-900">{newCount}</p>
-          <p className="text-[10px] uppercase tracking-wider text-wine-500 mt-1 flex items-center gap-1"><Clock className="w-3 h-3" />New</p>
+          <p className="text-xs uppercase tracking-wider text-wine-500 mt-1 flex items-center gap-1"><Clock className="w-3 h-3" />New</p>
         </div>
         <div className="p-4 rounded-xl bg-cream-100 border border-cream-300/60">
           <p className="text-2xl font-bold text-wine-900">{rows.length - newCount}</p>
-          <p className="text-[10px] uppercase tracking-wider text-wine-500 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Touched</p>
+          <p className="text-xs uppercase tracking-wider text-wine-500 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Touched</p>
         </div>
       </div>
 
@@ -109,11 +109,11 @@ export default function AdminFirstTimersPage() {
                   <p className="text-sm font-semibold text-wine-900 truncate">{row.full_name}</p>
                   <p className="text-xs text-wine-500">{row.phone} • {format(new Date(row.created_at), 'MMM d, yyyy')}</p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-[10px] font-medium border capitalize ${statusStyles[row.status] || statusStyles.new}`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium border capitalize ${statusStyles[row.status] || statusStyles.new}`}>
                   {row.status.replace('_', ' ')}
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-[10px] text-wine-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-wine-500">
                 <span className="px-2 py-0.5 rounded-full bg-cream-200/70 capitalize">{row.interested_unit}</span>
                 {row.is_first_time && <span className="px-2 py-0.5 rounded-full bg-wine-600/10 text-wine-700">First visit</span>}
               </div>

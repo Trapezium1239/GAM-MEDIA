@@ -200,7 +200,7 @@ export function CommandPalette({
               className="w-full pl-12 pr-4 py-3 bg-zinc-900/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-base"
               autoFocus
             />
-            <kbd className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-mono rounded">
+            <kbd className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-800 text-zinc-400 text-xs font-mono rounded">
               {SHORTCUT_KEY.toUpperCase()} + {MODIFIER_KEY === 'meta' ? '⌘' : 'Ctrl'}
             </kbd>
           </div>
@@ -234,7 +234,7 @@ export function CommandPalette({
                       {cmd.description && <p className="text-xs text-zinc-500 truncate">{cmd.description}</p>}
                     </div>
                     {cmd.shortcut && (
-                      <kbd className="px-2 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-mono rounded">
+                      <kbd className="px-2 py-0.5 bg-zinc-800 text-zinc-500 text-xs font-mono rounded">
                         {cmd.shortcut}
                       </kbd>
                     )}

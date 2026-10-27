@@ -235,7 +235,7 @@ export default function BiblePage() {
                 onClick={() => goTo(r.bookIndex, r.chapter, r.verse)}
                 className="card-compact w-full text-left space-y-1 touch-manipulation"
               >
-                <p className="text-[10px] uppercase tracking-wider text-wine-500 font-semibold">
+                <p className="text-xs uppercase tracking-wider text-wine-500 font-semibold">
                   {r.bookName} {r.chapter}:{r.verse}
                 </p>
                 <p className="text-xs text-wine-800 line-clamp-3">{r.text}</p>
@@ -314,7 +314,7 @@ export default function BiblePage() {
                   highlightVerse === v.verse ? 'bg-amber-500/20' : ''
                 }`}
               >
-                <sup className="text-[10px] font-bold text-wine-600 mr-1 select-none">{v.verse}</sup>
+                <sup className="text-xs font-bold text-wine-600 mr-1 select-none">{v.verse}</sup>
                 <span className="text-sm text-wine-800 leading-relaxed">{v.text}</span>
               </p>
             ))}
@@ -346,7 +346,7 @@ export default function BiblePage() {
         </button>
       </div>
 
-      <p className="text-center text-[10px] text-wine-500 pt-2">
+      <p className="text-center text-xs text-wine-500 pt-2">
         Scripture texts: King James Version (public domain) · World English Bible
         (public domain) · Igbo, Yorùbá & Hausa contemporary translations ©
         Biblica, Inc. (CC BY-SA 4.0)
@@ -459,7 +459,7 @@ export default function BiblePage() {
                   <>
                     {otBooks.length > 0 && (
                       <>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-wine-500 mb-1.5">
+                        <p className="text-xs font-bold uppercase tracking-wider text-wine-500 mb-1.5">
                           Old Testament
                         </p>
                         <div className="grid grid-cols-2 gap-1.5 mb-3">
@@ -485,7 +485,7 @@ export default function BiblePage() {
                     )}
                     {ntBooks.length > 0 && (
                       <>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-wine-500 mb-1.5">
+                        <p className="text-xs font-bold uppercase tracking-wider text-wine-500 mb-1.5">
                           New Testament
                         </p>
                         <div className="grid grid-cols-2 gap-1.5">
