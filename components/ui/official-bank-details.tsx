@@ -33,67 +33,67 @@ export function OfficialBankDetails({
   };
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-zinc-900/50 border border-amber-500/20 p-6 md:p-8">
-      <div className="relative max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-medium mb-6">
-          <Landmark className="w-3.5 h-3.5 flex-shrink-0" />
+    <section className="relative overflow-hidden rounded-xl bg-zinc-900/40 border border-amber-500/20 p-3">
+      <div className="relative max-w-md mx-auto">
+        <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-medium mb-2">
+          <Landmark className="w-3 h-3 flex-shrink-0" />
           Give & Support — Official Bank Details
         </div>
 
-        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <Landmark className="w-7 h-7 text-amber-400" />
+        <div className="bg-zinc-900/40 border border-zinc-800/40 rounded-lg p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <Landmark className="w-4 h-4 text-amber-400" />
             </div>
-            <div>
-              <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Bank</p>
-              <p className="font-semibold text-white">{bankName}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">Bank</p>
+              <p className="text-sm font-semibold text-white">{bankName}</p>
             </div>
           </div>
 
-          <div className="bg-zinc-900/30 rounded-xl p-5 border border-zinc-800/50 space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-zinc-400 w-28 flex-shrink-0">Account Name</span>
-              <div className="flex-1 flex items-center gap-3">
-                <span className="font-mono text-lg font-bold text-white break-all">{accountName}</span>
+          <div className="bg-zinc-900/30 rounded-lg p-3 border border-zinc-800/40 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-medium text-zinc-400 w-18 flex-shrink-0">Account Name</span>
+              <div className="flex-1 flex items-center gap-2">
+                <span className="font-mono text-sm font-bold text-white break-all">{accountName}</span>
                 <button
                   onClick={() => navigator.clipboard.writeText(accountName)}
-                  className="px-3 py-1.5 text-xs bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg transition flex-shrink-0"
+                  className="px-2 py-1 text-[10px] bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded transition flex-shrink-0"
                 >
                   Copy
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-zinc-400 w-28 flex-shrink-0">Account Number</span>
-              <div className="flex-1 flex items-center gap-3">
-                <span className="font-mono text-2xl font-bold text-amber-400 tracking-widest break-all">{accountNumber}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-medium text-zinc-400 w-18 flex-shrink-0">Account Number</span>
+              <div className="flex-1 flex items-center gap-2">
+                <span className="font-mono text-sm font-bold text-amber-400 tracking-widest break-all">{accountNumber}</span>
                 <button
                   onClick={() => navigator.clipboard.writeText(accountNumber)}
-                  className="px-4 py-2 text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-amber-300 rounded-lg transition flex-shrink-0 font-medium"
+                  className="px-2 py-1 text-[10px] bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-amber-300 rounded transition flex-shrink-0 font-medium"
                 >
                   Copy Account Number
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-zinc-400 w-28 flex-shrink-0">Bank</span>
-              <span className="font-medium text-white">{bankName}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-medium text-zinc-400 w-18 flex-shrink-0">Bank</span>
+              <span className="text-sm font-medium text-white">{bankName}</span>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-zinc-800/50">
-            <p className="text-xs font-medium text-zinc-400 mb-3">For</p>
-            <div className="flex flex-wrap gap-2">
+          <div className="pt-2 border-t border-zinc-800/40">
+            <p className="text-[10px] font-medium text-zinc-400 mb-1">For</p>
+            <div className="flex flex-wrap gap-1.5">
               {purposes.map((purpose) => (
-                <span key={purpose} className="px-3 py-1 text-xs bg-zinc-800 text-zinc-300 rounded-full border border-zinc-700">
+                <span key={purpose} className="px-2 py-0.5 text-[10px] bg-zinc-800 text-zinc-300 rounded-full border border-zinc-700">
                   {purpose}
                 </span>
               ))}
             </div>
           </div>
 
-          <p className="text-xs text-zinc-500 italic bg-zinc-900/30 rounded-lg p-4 border border-zinc-800/50">
+          <p className="text-[10px] text-zinc-500 italic bg-zinc-900/30 rounded p-2 border border-zinc-800/40">
             {note}
           </p>
         </div>
