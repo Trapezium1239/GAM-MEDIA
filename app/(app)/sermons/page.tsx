@@ -1,44 +1,49 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Calendar, BookOpen, Volume2, Play, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
-import Link from 'next/link';
-import { PlaySermonButton } from '@/components/audio/play-button';
-import { SermonSearch } from '@/components/sermons/sermon-search';
+import { BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { SermonSearch, type Sermon, type Topic } from '@/components/sermons/sermon-search';
 
-interface Sermon {
-  id: string;
-  title: string;
-  preacher: string;
-  date: string;
-  audio_url: string | null;
-  video_link: string | null;
-  topic_id: string | null;
-}
-
-interface Topic {
-  id: string;
-  name: string;
-  slug: string;
-}
+/** Enough for an instant first screen without shipping thousands of rows. */
+const INITIAL_PAGE_SIZE = 200;
 
 export default function SermonsPage() {
-  const [sermons, setSermons] = useState<(Sermon & { topics: Topic | null })[] | null>(null);
+  const [sermons, setSermons] = useState<Sermon[] | null>(null);
+  const [total, setTotal] = useState(0);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const supabase = createClient();
+
     (async () => {
       const [sermonsRes, topicsRes] = await Promise.all([
-        supabase.from('sermons').select('*, topics(name, slug)').order('date', { ascending: false }),
-        supabase.from('topics').select('*').order('name'),
+        supabase
+          .from('sermons')
+          .select(
+            'id, title, preacher, date, duration, audio_url, video_link, topic_id, topics(name, slug)',
+            { count: 'exact' }
+          )
+          .order('date', { ascending: false })
+          .limit(INITIAL_PAGE_SIZE),
+        supabase.from('topics').select('id, name, slug').order('name'),
       ]);
+
       if (cancelled) return;
-      setSermons(((sermonsRes.data || []) as (Sermon & { topics: Topic | null })[]));
-      setTopics((topicsRes.data || []) as Topic[]);
+
+      if (sermonsRes.error) {
+        setError(sermonsRes.error.message);
+        setSermons([]);
+        return;
+      }
+
+      setSermons((sermonsRes.data ?? []) as unknown as Sermon[]);
+      setTotal(sermonsRes.count ?? sermonsRes.data?.length ?? 0);
+      setTopics((topicsRes.data ?? []) as Topic[]);
     })();
+
     return () => {
       cancelled = true;
     };
@@ -47,8 +52,18 @@ export default function SermonsPage() {
   if (sermons === null) {
     return (
       <div className="empty-state">
-        <Loader2 className="empty-state-icon animate-spin" />
+        <Loader2 className="empty-state-icon animate-spin" aria-hidden="true" />
         <p className="empty-state-title">Loading sermons...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="empty-state">
+        <AlertCircle className="empty-state-icon text-red-500" aria-hidden="true" />
+        <p className="empty-state-title">Could not load sermons</p>
+        <p className="empty-state-desc">{error}</p>
       </div>
     );
   }
@@ -57,13 +72,13 @@ export default function SermonsPage() {
     <div className="space-y-6 py-4 pb-32">
       <header>
         <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-wine-600" />
+          <BookOpen className="w-6 h-6 text-wine-600" aria-hidden="true" />
           Word Vault
         </h1>
         <p className="text-xs text-wine-500 mt-1">Sermons, teachings, and series</p>
       </header>
 
-      <SermonSearch initialSermons={sermons} topics={topics} serverSearchEnabled />
+      <SermonSearch initialSermons={sermons} topics={topics} totalSermons={total} />
     </div>
   );
 }

@@ -1,8 +1,9 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { format } from 'date-fns';
-import { Calendar, BookOpen, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Calendar, BookOpen, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface DevotionalRow {
@@ -12,21 +13,46 @@ interface DevotionalRow {
   scripture_reference: string;
 }
 
+const COLUMNS = 'id, date, title, scripture_reference';
+
+/** Noon avoids the UTC-midnight date shifting by a day in negative offsets. */
+function parseDate(date: string): Date {
+  return new Date(`${date}T12:00:00`);
+}
+
 export default function DevotionalArchivePage() {
   const [devotionals, setDevotionals] = useState<DevotionalRow[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const supabase = createClient();
-    supabase
-      .from('daily_devotionals')
-      .select('id, date, title, scripture_reference')
-      .lte('date', new Date().toISOString().split('T')[0])
-      .order('date', { ascending: false })
-      .limit(100)
-      .then(({ data }) => {
-        if (!cancelled) setDevotionals((data as DevotionalRow[]) || []);
-      });
+    const today = new Date().toISOString().split('T')[0];
+
+    (async () => {
+      const { data } = await supabase
+        .from('daily_devotionals')
+        .select(COLUMNS)
+        .lte('date', today)
+        .order('date', { ascending: false })
+        .limit(100);
+
+      let rows = (data ?? []) as unknown as DevotionalRow[];
+
+      // Fallback to the legacy archive table so the page is never blank
+      // before the daily workflow has published its first entry.
+      if (rows.length === 0) {
+        const { data: legacy } = await supabase
+          .from('devotionals')
+          .select(COLUMNS)
+          .lte('date', today)
+          .order('date', { ascending: false })
+          .limit(100);
+        rows = (legacy ?? []) as unknown as DevotionalRow[];
+      }
+
+      if (!cancelled) setDevotionals(rows);
+    })();
+
     return () => {
       cancelled = true;
     };
@@ -34,51 +60,46 @@ export default function DevotionalArchivePage() {
 
   return (
     <div className="space-y-6 pb-32">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-amber-400" />
-            Devotional Archive
-          </h1>
-          <p className="text-xs text-zinc-400 mt-1">Past daily devotionals</p>
-        </div>
+      <header>
+        <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
+          <BookOpen className="w-6 h-6 text-wine-600" aria-hidden="true" />
+          Devotional Archive
+        </h1>
+        <p className="text-xs text-wine-500 mt-1">Past daily devotionals</p>
       </header>
 
       {devotionals === null ? (
         <div className="empty-state">
-          <Loader2 className="empty-state-icon animate-spin" />
+          <Loader2 className="empty-state-icon animate-spin" aria-hidden="true" />
           <p className="empty-state-title">Loading archive...</p>
         </div>
       ) : devotionals.length === 0 ? (
-        <div className="text-center py-16 text-zinc-500">
-          <Calendar className="w-12 h-12 mx-auto mb-3 text-zinc-700" />
-          <p className="text-sm">No devotionals yet</p>
+        <div className="empty-state py-12">
+          <Calendar className="empty-state-icon text-wine-300" aria-hidden="true" />
+          <p className="empty-state-title">No devotionals yet</p>
+          <p className="empty-state-desc">Today&apos;s devotional will appear here once it is published.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {devotionals.map((devotional) => {
-            const date = new Date(devotional.date);
-            return (
+        <ul className="space-y-2">
+          {devotionals.map((devotional) => (
+            <li key={`${devotional.date}-${devotional.id}`}>
               <Link
-                key={devotional.id}
                 href={`/devotional/${devotional.date}`}
-                className="card flex items-center justify-between gap-4 p-4 transition hover:border-amber-500/30"
+                className="card-compact flex items-center gap-3 hover:border-wine-300/60"
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-14 h-14 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-6 h-6 text-amber-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{devotional.title}</p>
-                    <p className="text-xs text-amber-400">{devotional.scripture_reference}</p>
-                    <p className="text-xs text-zinc-500">{format(date, 'EEEE, MMMM d, yyyy')}</p>
-                  </div>
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-cream-200">
+                  <Calendar className="h-4 w-4 text-wine-600" aria-hidden="true" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-zinc-500 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-wine-900">{devotional.title}</p>
+                  <p className="truncate text-xs text-wine-600">{devotional.scripture_reference}</p>
+                  <p className="text-xs text-wine-500">{format(parseDate(devotional.date), 'EEEE, MMMM d, yyyy')}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-wine-300" aria-hidden="true" />
               </Link>
-            );
-          })}
-        </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

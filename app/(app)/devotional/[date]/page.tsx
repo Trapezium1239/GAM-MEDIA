@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createStaticClient } from '@/lib/supabase/static';
 import { format } from 'date-fns';
-import { Calendar, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Calendar, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { DevotionalActions } from '@/components/devotional/devotional-actions';
 
@@ -20,22 +20,43 @@ interface Devotional {
   published_at?: string | null;
 }
 
+type StaticClient = ReturnType<typeof createStaticClient>;
+
+/** New table first, legacy archive table as a fallback. */
+async function fetchDevotional(supabase: StaticClient, date: string): Promise<Devotional | null> {
+  const { data } = await supabase.from('daily_devotionals').select('*').eq('date', date).maybeSingle();
+  if (data) return data as Devotional;
+
+  const { data: legacy } = await supabase.from('devotionals').select('*').eq('date', date).maybeSingle();
+  return (legacy as Devotional | null) ?? null;
+}
+
 export async function generateStaticParams() {
   const supabase = createStaticClient();
+  const today = new Date().toISOString().split('T')[0];
+
   const { data } = await supabase
     .from('daily_devotionals')
     .select('date')
-    .lte('date', new Date().toISOString().split('T')[0])
+    .lte('date', today)
     .order('date', { ascending: false });
 
-  if (!data || data.length === 0) {
-    // Fallback for empty database at build time
-    return [{ date: new Date().toISOString().split('T')[0] }];
+  if (data && data.length > 0) {
+    return data.map((d) => ({ date: d.date }));
   }
 
-  return data.map((d) => ({
-    date: d.date,
-  }));
+  // Fallback: the legacy archive table already holds a full year of entries.
+  const { data: legacy } = await supabase
+    .from('devotionals')
+    .select('date')
+    .lte('date', today)
+    .order('date', { ascending: false });
+
+  if (legacy && legacy.length > 0) {
+    return legacy.map((d) => ({ date: d.date }));
+  }
+
+  return [{ date: today }];
 }
 
 interface Props {
@@ -44,17 +65,12 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { date } = await params;
-  const supabase = createStaticClient();
-  const { data } = await supabase
-    .from('daily_devotionals')
-    .select('title, scripture_reference')
-    .eq('date', date)
-    .single();
+  const devotional = await fetchDevotional(createStaticClient(), date);
 
-  if (data) {
+  if (devotional) {
     return {
-      title: `${data.title} | ${format(new Date(date), 'MMMM d, yyyy')} | GAM Church`,
-      description: data.scripture_reference,
+      title: `${devotional.title} | ${format(new Date(date), 'MMMM d, yyyy')} | GAM Church`,
+      description: devotional.scripture_reference,
     };
   }
   return {
@@ -64,13 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DevotionalDatePage({ params }: Props) {
   const { date } = await params;
-  const supabase = createStaticClient();
-
-  const { data: devotional } = await supabase
-    .from('daily_devotionals')
-    .select('*')
-    .eq('date', date)
-    .single();
+  const devotional = await fetchDevotional(createStaticClient(), date);
 
   if (!devotional) {
     notFound();

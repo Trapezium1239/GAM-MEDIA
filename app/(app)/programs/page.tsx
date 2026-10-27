@@ -64,13 +64,7 @@ export default function ProgramsPage() {
         <p className="text-xs text-wine-500 mt-1">Upcoming and past church events</p>
       </header>
 
-      <UnifiedSearch
-        initialResults={searchItems}
-        topics={[]}
-        type="programs"
-        serverSearchEnabled
-        serverSearchThreshold={50}
-      />
+      <UnifiedSearch initialResults={searchItems} type="programs" />
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-wine-600 uppercase tracking-wider">Upcoming Events</h2>

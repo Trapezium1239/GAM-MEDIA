@@ -1,10 +1,10 @@
 'use client'
 import { useState } from 'react'
 import { useAudioStore } from '@/store/use-audio-store'
-import { Music, Pause, Download, Check, Loader2 } from 'lucide-react'
+import { Music, Pause, Download, Check, Loader2, VolumeX } from 'lucide-react'
 import { getCachedAudio } from '@/lib/offline-storage'
 import { getNativeAudioUri } from '@/lib/audio-persistence'
-import { resolveAudioUrl } from '@/lib/audio-url'
+import { isPlayableAudio, resolveAudioUrl } from '@/lib/audio-url'
 
 export interface PlayTrackData {
   id: string
@@ -18,8 +18,11 @@ export async function downloadTrackForOffline(
   track: PlayTrackData,
   setOfflineAudioUrl: (id: string, url: string) => void
 ): Promise<void> {
-  const { downloadAudioToDevice } = await import('@/lib/native/audio-download')
   const resolvedUrl = resolveAudioUrl(track.audioUrl)
+  if (!isPlayableAudio(track.audioUrl)) {
+    throw new Error('Audio not available for this track yet')
+  }
+  const { downloadAudioToDevice } = await import('@/lib/native/audio-download')
   const headRes = await fetch(resolvedUrl, { method: 'HEAD' }).catch(() => null)
   const mimeType = headRes?.headers.get('content-type') || 'audio/mpeg'
   const result = await downloadAudioToDevice(track.id, resolvedUrl, {
@@ -65,11 +68,12 @@ function usePlayTrack(track: PlayTrackData) {
   const [downloaded, setDownloaded] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
+  const playable = isPlayableAudio(track.audioUrl)
   const isActive = currentTrack?.id === track.id
   const isThisPlaying = isActive && isPlaying
 
   const handleDownload = async () => {
-    if (downloaded || downloading) return
+    if (!playable || downloaded || downloading) return
     setDownloading(true)
     setDownloadError(null)
     try {
@@ -83,7 +87,7 @@ function usePlayTrack(track: PlayTrackData) {
   }
 
   const handlePlay = () => {
-    unlockGesture(track.audioUrl)
+    unlockGesture(resolveAudioUrl(track.audioUrl))
     if (isActive) {
       togglePlay()
       return
@@ -91,6 +95,7 @@ function usePlayTrack(track: PlayTrackData) {
     const nativeUri = getNativeAudioUri(track.id)
     playTrack({
       ...track,
+      audioUrl: resolveAudioUrl(track.audioUrl),
       offlineAudioUrl: nativeUri ?? undefined,
     })
     void getCachedAudio(track.id).then((cached) => {
@@ -98,7 +103,7 @@ function usePlayTrack(track: PlayTrackData) {
     })
   }
 
-  return { isThisPlaying, handlePlay, handleDownload, downloading, downloaded, downloadError }
+  return { playable, isThisPlaying, handlePlay, handleDownload, downloading, downloaded, downloadError }
 }
 
 export function PlaySermonButton({
@@ -110,7 +115,19 @@ export function PlaySermonButton({
   className?: string
   dataPlayBtn?: boolean
 }) {
-  const { isThisPlaying, handlePlay, handleDownload, downloading, downloaded, downloadError } = usePlayTrack(track)
+  const { playable, isThisPlaying, handlePlay, handleDownload, downloading, downloaded, downloadError } =
+    usePlayTrack(track)
+
+  if (!playable) {
+    return (
+      <span
+        className={`flex-1 py-2 text-xs font-semibold text-wine-500 bg-cream-200/70 rounded-xl flex items-center justify-center gap-1.5 ${className}`}
+      >
+        <VolumeX className="w-3.5 h-3.5" aria-hidden="true" />
+        Audio not available
+      </span>
+    )
+  }
 
   return (
     <div className="flex items-center gap-2">
@@ -135,7 +152,7 @@ export function PlaySermonButton({
         type="button"
         onClick={() => void handleDownload()}
         disabled={downloading || downloaded}
-        className="px-3 py-2 text-xs font-semibold rounded-xl text-wine-700 bg-cream-200 hover:bg-cream-300 transition touch-manipulation flex items-center gap-1.5"
+        className="px-3 py-2 text-xs font-semibold rounded-xl text-wine-700 bg-cream-200 hover:bg-cream-300 transition touch-manipulation flex items-center gap-1.5 disabled:opacity-60"
         aria-label={downloaded ? 'Saved offline' : downloading ? 'Saving' : 'Save for offline'}
       >
         {downloading ? (
@@ -157,7 +174,22 @@ export function PlaySermonButton({
 }
 
 export function PlayMusicButton({ track }: { track: PlayTrackData }) {
-  const { isThisPlaying, handlePlay, handleDownload, downloading, downloaded, downloadError } = usePlayTrack(track)
+  const { playable, isThisPlaying, handlePlay, handleDownload, downloading, downloaded, downloadError } =
+    usePlayTrack(track)
+
+  if (!playable) {
+    return (
+      <div className="card flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-cream-200 flex items-center justify-center flex-shrink-0">
+          <VolumeX className="w-5 h-5 text-wine-400" aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-wine-900 truncate">{track.title}</p>
+          <p className="text-xs text-wine-500 truncate">{track.artist} · Audio not available</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-1">
@@ -184,7 +216,7 @@ export function PlayMusicButton({ track }: { track: PlayTrackData }) {
           type="button"
           onClick={() => void handleDownload()}
           disabled={downloading || downloaded}
-          className="p-2 rounded-xl text-wine-700 bg-cream-200 touch-manipulation"
+          className="p-2 rounded-xl text-wine-700 bg-cream-200 touch-manipulation disabled:opacity-60"
           aria-label={downloaded ? 'Saved offline' : downloading ? 'Saving' : 'Save for offline'}
         >
           {downloading ? (

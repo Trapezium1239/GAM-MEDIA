@@ -62,14 +62,63 @@ async function main() {
   }
   console.log('Prepared', devotionals.length, 'devotionals, missing verses:', missing);
 
-  // Upsert into daily_devotionals (the table get_todays_devotional() reads from)
-  await supabase.from('daily_devotionals').delete().neq('id','00000000-0000-0000-0000-000000000000');
-  let ins=0;
-  for (let i=0;i<devotionals.length;i+=50) {
-    const batch = devotionals.slice(i,i+50);
-    const {error} = await supabase.from('daily_devotionals').upsert(batch, { onConflict: 'date' });
-    if (error) console.error('Batch failed:', error.message); else { ins+=batch.length; if (ins%100===0) console.log('inserted',ins,'/',devotionals.length); }
+  // Upsert into daily_devotionals (the table get_todays_devotional() reads from).
+  // Preflight the FIRST batch so a permissions problem aborts before any write.
+  const firstBatch = devotionals.slice(0, 50);
+  const first = await supabase
+    .from('daily_devotionals')
+    .upsert(firstBatch, { onConflict: 'date' });
+
+  if (first.error) {
+    printPermissionHint(first.error.message);
+    process.exitCode = 1;
+    return;
   }
+
+  let ins = firstBatch.length;
+  for (let i = 50; i < devotionals.length; i += 50) {
+    const batch = devotionals.slice(i, i + 50);
+    const { error } = await supabase
+      .from('daily_devotionals')
+      .upsert(batch, { onConflict: 'date' });
+    if (error) {
+      console.error('Batch failed at', i, '-', error.message);
+      process.exitCode = 1;
+    } else {
+      ins += batch.length;
+      if (ins % 100 === 0) console.log('inserted', ins, '/', devotionals.length);
+    }
+  }
+
+  // Remove rows outside the generated year so the archive stays exact.
+  const firstDate = devotionals[0]?.date;
+  const lastDate = devotionals[devotionals.length - 1]?.date;
+  if (firstDate && lastDate) {
+    const { error: pruneError } = await supabase
+      .from('daily_devotionals')
+      .delete()
+      .or(`date.lt.${firstDate},date.gt.${lastDate}`);
+    if (pruneError) console.error('Prune failed:', pruneError.message);
+  }
+
   console.log('Done. Inserted', ins, '/', devotionals.length, 'into daily_devotionals');
+}
+
+function printPermissionHint(message: string) {
+  console.error('\nFAILED:', message);
+  if (!/permission denied/i.test(message)) return;
+  console.error(`
+The Supabase roles have no table privileges yet. Run this once in the
+Supabase SQL Editor, then re-run this script:
+
+  https://supabase.com/dashboard/project/lxkugbswxdrkdhuyorwf/sql/new
+
+  GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+  GRANT ALL ON ALL TABLES    IN SCHEMA public TO service_role;
+  GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+  GRANT SELECT, INSERT, UPDATE, DELETE ON public.daily_devotionals TO service_role;
+
+(The full, copy-paste version lives in supabase/APPLY_NOW.sql.)
+`);
 }
 main().catch(console.error);

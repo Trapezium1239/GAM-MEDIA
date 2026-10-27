@@ -27,20 +27,32 @@ export default function DevotionalPage() {
   useEffect(() => {
     let cancelled = false;
     const supabase = createClient();
-    supabase
-      .rpc('get_todays_devotional')
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) {
-          console.error('[devotional] rpc failed:', error.message);
-        } else if (data && !(typeof data === 'object' && Object.keys(data).length === 0)) {
-          setDevotional(data as Devotional);
-        }
-        setLoading(false);
-      }, (err: unknown) => {
-        console.error('[devotional] unexpected error:', err instanceof Error ? err.message : err);
-        if (!cancelled) setLoading(false);
-      });
+    const today = new Date().toISOString().split('T')[0];
+
+    (async () => {
+      // 1. Canonical source: the RPC that the daily workflow publishes to.
+      const { data: rpcData } = await supabase.rpc('get_todays_devotional');
+      let result = (rpcData ?? null) as Devotional | null;
+      if (result && typeof result === 'object' && Object.keys(result).length === 0) {
+        result = null;
+      }
+
+      // 2. Fallback: read the archive table directly. Keeps the page working
+      //    even if the RPC is unavailable on the current deployment.
+      if (!result) {
+        const { data } = await supabase
+          .from('devotionals')
+          .select('*')
+          .eq('date', today)
+          .maybeSingle();
+        result = (data as Devotional | null) ?? null;
+      }
+
+      if (cancelled) return;
+      setDevotional(result);
+      setLoading(false);
+    })();
+
     return () => {
       cancelled = true;
     };

@@ -1,10 +1,12 @@
 'use client';
-import { useAudioStore } from '@/store/use-audio-store';
-import { createClient } from '@/lib/supabase/client';
+
 import { useEffect, useState } from 'react';
-import { Music, Play, Pause, Youtube, Search } from 'lucide-react';
-import { YouTubePlaylistEmbed } from '@/components/youtube/youtube-playlist-embed';
+import { Music, Youtube } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { useAudioStore } from '@/store/use-audio-store';
 import { UnifiedSearch } from '@/components/search/unified-search';
+import { YouTubePlaylistEmbed } from '@/components/youtube/youtube-playlist-embed';
+import { isPlayableAudio } from '@/lib/audio-url';
 
 interface MusicTrack {
   id: string;
@@ -18,42 +20,53 @@ interface MusicTrack {
 export default function MusicPage() {
   const [tracks, setTracks] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(true);
-  const { currentTrack, isPlaying, playTrack, togglePlay } = useAudioStore();
+  const { playTrack } = useAudioStore();
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.from('church_music').select('*').order('created_at', { ascending: false }).then(({ data }) => {
-      setTracks(data || []);
-      setLoading(false);
-    });
+    supabase
+      .from('church_music')
+      .select('id, title, artist_choir, audio_url, lyrics, release_date')
+      .order('title', { ascending: true })
+      .then(({ data }) => {
+        setTracks((data ?? []) as MusicTrack[]);
+        setLoading(false);
+      });
   }, []);
 
   const handlePlay = (track: MusicTrack) => {
-    if (currentTrack?.id === track.id) {
-      togglePlay();
-    } else {
-      playTrack({ id: track.id, title: track.title, artist: track.artist_choir, audioUrl: track.audio_url });
-    }
+    if (!isPlayableAudio(track.audio_url)) return;
+    playTrack({
+      id: track.id,
+      title: track.title,
+      artist: track.artist_choir,
+      audioUrl: track.audio_url,
+    });
   };
 
-  const searchItems = tracks.map(t => ({
-    id: t.id,
-    title: t.title,
-    artist_choir: t.artist_choir,
-    audio_url: t.audio_url,
-    release_date: t.release_date,
+  const searchItems = tracks.map((track) => ({
+    id: track.id,
+    title: track.title,
+    artist_choir: track.artist_choir,
+    audio_url: track.audio_url,
+    release_date: track.release_date,
     _type: 'music' as const,
   }));
 
   if (loading) {
-    return <div className="empty-state"><Music className="empty-state-icon" /><p className="empty-state-title">Loading music...</p></div>;
+    return (
+      <div className="empty-state">
+        <Music className="empty-state-icon" aria-hidden="true" />
+        <p className="empty-state-title">Loading music...</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6 py-4 pb-32">
       <header>
         <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
-          <Music className="w-6 h-6 text-wine-600" />
+          <Music className="w-6 h-6 text-wine-600" aria-hidden="true" />
           Church Music
         </h1>
         <p className="text-xs text-wine-500 mt-1">Productions from our choir and worship teams</p>
@@ -61,28 +74,22 @@ export default function MusicPage() {
 
       <UnifiedSearch
         initialResults={searchItems}
-        topics={[]}
         type="music"
-        serverSearchEnabled
-        serverSearchThreshold={50}
-        onResultClick={(result) => handlePlay(tracks.find(t => t.id === result.id)!)}
+        onResultClick={(result) => {
+          const track = tracks.find((item) => item.id === result.id);
+          if (track) handlePlay(track);
+        }}
       />
 
-      {/* YouTube Music Playlist */}
-      <section className="mt-8 pt-8 border-t border-cream-300/50">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-wine-900 flex items-center justify-center gap-2">
-            <Youtube className="w-5 h-5 text-red-500" />
+      <section className="mt-8 border-t border-cream-300/50 pt-8">
+        <div className="mb-4 text-center">
+          <h2 className="text-lg font-bold text-wine-900 flex items-center justify-center gap-2">
+            <Youtube className="w-5 h-5 text-red-500" aria-hidden="true" />
             GAM Music on YouTube
           </h2>
-          <p className="text-wine-500 text-sm">Stream our full worship playlist on YouTube Music</p>
+          <p className="mt-1 text-xs text-wine-500">Stream our full worship playlist on YouTube Music</p>
         </div>
-        <YouTubePlaylistEmbed 
-          playlistId="PLEjZZqlkBhWs"
-          title="GAM Worship & Praise"
-          height={500}
-          autoplay={true}
-        />
+        <YouTubePlaylistEmbed playlistId="PLEjZZqlkBhWs" title="GAM Worship &amp; Praise" height={260} />
       </section>
     </div>
   );
