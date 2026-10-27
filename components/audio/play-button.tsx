@@ -4,6 +4,7 @@ import { useAudioStore } from '@/store/use-audio-store'
 import { Music, Pause, Download, Check, Loader2 } from 'lucide-react'
 import { getCachedAudio } from '@/lib/offline-storage'
 import { getNativeAudioUri } from '@/lib/audio-persistence'
+import { resolveAudioUrl } from '@/lib/audio-url'
 
 export interface PlayTrackData {
   id: string
@@ -18,9 +19,10 @@ export async function downloadTrackForOffline(
   setOfflineAudioUrl: (id: string, url: string) => void
 ): Promise<void> {
   const { downloadAudioToDevice } = await import('@/lib/native/audio-download')
-  const headRes = await fetch(track.audioUrl, { method: 'HEAD' }).catch(() => null)
+  const resolvedUrl = resolveAudioUrl(track.audioUrl)
+  const headRes = await fetch(resolvedUrl, { method: 'HEAD' }).catch(() => null)
   const mimeType = headRes?.headers.get('content-type') || 'audio/mpeg'
-  const result = await downloadAudioToDevice(track.id, track.audioUrl, {
+  const result = await downloadAudioToDevice(track.id, resolvedUrl, {
     title: track.title,
     artist: track.artist,
     mimeType,

@@ -20,6 +20,7 @@ export function PersistentPlayer() {
   const [showResumePrompt, setShowResumePrompt] = useState(false)
   const [resumePosition, setResumePosition] = useState<AudioPosition | null>(null)
   const [muted, setMuted] = useState(false)
+  const [audioError, setAudioError] = useState<string | null>(null)
 
   useEffect(() => {
     const audio = audioRef.current
@@ -207,13 +208,22 @@ export function PersistentPlayer() {
       <div className="fixed bottom-16 left-0 right-0 z-50 max-w-md mx-auto bg-cream-100 border-t border-cream-300 p-3 shadow-sm flex items-center justify-between gap-3">
         <audio
           ref={audioRef}
-          src={source}
+          src={source || undefined}
           preload="auto"
           onEnded={() => {
             clearAudioPosition()
             stop()
           }}
+          onError={(e) => {
+            setAudioError(`Unable to play audio: ${source ? 'check your connection' : 'no audio URL available'}`)
+            console.error('Audio playback error:', e)
+          }}
         />
+        {audioError && (
+          <div className="fixed bottom-20 left-4 right-4 z-50 max-w-md mx-auto p-3 rounded-lg bg-red-500/90 text-white text-sm text-center shadow-lg">
+            {audioError}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-wine-900 truncate">{currentTrack.title}</p>
           <p className="text-xs text-wine-500 truncate">

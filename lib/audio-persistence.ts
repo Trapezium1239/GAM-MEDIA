@@ -76,10 +76,12 @@ export function getNativeAudioUri(trackId: string): string | null {
   }
 }
 
+import { resolveAudioUrl } from './audio-url';
+
 /** Resolve the best playable source: native file URI > cached blob > remote URL. */
 export function resolveAudioSource(track: { id: string; audioUrl: string; offlineAudioUrl?: string }): string {
   if (track.offlineAudioUrl) return track.offlineAudioUrl;
   const nativeUri = getNativeAudioUri(track.id);
   if (nativeUri) return nativeUri;
-  return track.audioUrl;
+  return resolveAudioUrl(track.audioUrl);
 }
