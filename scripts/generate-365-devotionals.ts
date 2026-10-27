@@ -40,13 +40,14 @@ async function main() {
       date: d.toISOString().split('T')[0],
       title: titles[theme],
       scripture_reference: p.book + ' ' + p.chapter + ':' + p.verse,
-      scripture_text: '',
+      scripture_text: '', // filled below
       reflection: reflections[theme],
       prayer: 'Lord, help me live out ' + theme + ' today. Amen.',
       application_question: apps[theme],
-      source: 'manual',
-      created_at: new Date().toISOString(),
-      published_at: d.toISOString().split('T')[0],
+      source: 'manual' as const,
+      external_id: null,
+      created_by: null,
+      published_at: d.toISOString().split('T')[0] + 'T00:00:00Z',
     };
   });
   const lookup = new Map();
@@ -60,13 +61,15 @@ async function main() {
     } else missing++;
   }
   console.log('Prepared', devotionals.length, 'devotionals, missing verses:', missing);
-  await supabase.from('devotionals').delete().neq('id','00000000-0000-0000-0000-000000000000');
+
+  // Upsert into daily_devotionals (the table get_todays_devotional() reads from)
+  await supabase.from('daily_devotionals').delete().neq('id','00000000-0000-0000-0000-000000000000');
   let ins=0;
   for (let i=0;i<devotionals.length;i+=50) {
     const batch = devotionals.slice(i,i+50);
-    const {error} = await supabase.from('devotionals').insert(batch);
+    const {error} = await supabase.from('daily_devotionals').upsert(batch, { onConflict: 'date' });
     if (error) console.error('Batch failed:', error.message); else { ins+=batch.length; if (ins%100===0) console.log('inserted',ins,'/',devotionals.length); }
   }
-  console.log('Done. Inserted', ins, '/', devotionals.length);
+  console.log('Done. Inserted', ins, '/', devotionals.length, 'into daily_devotionals');
 }
 main().catch(console.error);

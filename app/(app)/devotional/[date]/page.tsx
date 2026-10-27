@@ -23,7 +23,7 @@ interface Devotional {
 export async function generateStaticParams() {
   const supabase = createStaticClient();
   const { data } = await supabase
-    .from('devotionals')
+    .from('daily_devotionals')
     .select('date')
     .lte('date', new Date().toISOString().split('T')[0])
     .order('date', { ascending: false });
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { date } = await params;
   const supabase = createStaticClient();
   const { data } = await supabase
-    .from('devotionals')
+    .from('daily_devotionals')
     .select('title, scripture_reference')
     .eq('date', date)
     .single();
@@ -67,7 +67,7 @@ export default async function DevotionalDatePage({ params }: Props) {
   const supabase = createStaticClient();
 
   const { data: devotional } = await supabase
-    .from('devotionals')
+    .from('daily_devotionals')
     .select('*')
     .eq('date', date)
     .single();

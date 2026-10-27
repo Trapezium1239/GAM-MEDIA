@@ -1,0 +1,32 @@
+name: Daily Devotionals
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC to generate tomorrow's devotionals
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      force_regenerate:
+        description: 'Force regenerate all 365 devotionals'
+        required: false
+        default: 'false'
+
+jobs:
+  generate-devotionals:
+    name: Generate Daily Devotionals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Generate 365 daily devotionals
+        run: npx tsx scripts/generate-365-devotionals.ts
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
