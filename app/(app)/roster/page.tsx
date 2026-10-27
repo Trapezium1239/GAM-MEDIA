@@ -32,8 +32,7 @@ export default function RosterPage() {
   const fetchShifts = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
-    setCurrentUserId(user.id)
+    if (user) setCurrentUserId(user.id)
 
     let query = supabase
       .from('roster_shifts')
@@ -44,7 +43,7 @@ export default function RosterPage() {
       `)
       .order('service_date', { ascending: true })
 
-    if (filter === 'my_shifts') {
+    if (filter === 'my_shifts' && user) {
       query = query.eq('user_id', user.id)
     } else if (filter === 'swap_requests') {
       query = query.eq('status', 'swap_requested')
@@ -180,7 +179,7 @@ export default function RosterPage() {
               )}
 
               <div className="flex items-center gap-2 pt-2 border-t border-zinc-800/60">
-                {shift.status === 'assigned' && (
+                {shift.status === 'assigned' && currentUserId && (
                   <>
                     <button
                       onClick={() => {
@@ -227,7 +226,7 @@ export default function RosterPage() {
                   </>
                 )}
 
-                {shift.status === 'swap_requested' && shift.user_id !== shift.covered_by && (
+                {shift.status === 'swap_requested' && shift.user_id !== shift.covered_by && currentUserId && (
                   <button
                     onClick={() => handleAction(shift.id, 'cover_shift')}
                     disabled={isPending}
