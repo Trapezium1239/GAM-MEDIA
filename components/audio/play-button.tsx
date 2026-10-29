@@ -164,6 +164,15 @@ export function PlaySermonButton({
         )}
         <span>{downloaded ? 'Saved' : 'Save'}</span>
       </button>
+      <a
+        href={resolveAudioUrl(track.audioUrl)}
+        download
+        className="px-3 py-2 text-xs font-semibold rounded-xl text-wine-700 bg-cream-200 hover:bg-cream-300 transition touch-manipulation flex items-center gap-1.5"
+        aria-label={`Download ${track.title}`}
+      >
+        <Download className="w-3.5 h-3.5" aria-hidden="true" />
+        <span>Download</span>
+      </a>
       {downloadError && (
         <span className="text-xs text-wine-700" role="alert">
           {downloadError}
@@ -227,6 +236,14 @@ export function PlayMusicButton({ track }: { track: PlayTrackData }) {
             <Download className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
+        <a
+          href={resolveAudioUrl(track.audioUrl)}
+          download
+          className="p-2 rounded-xl text-wine-700 bg-cream-200 touch-manipulation"
+          aria-label={`Download ${track.title}`}
+        >
+          <Download className="w-4 h-4" aria-hidden="true" />
+        </a>
       </div>
       {downloadError && (
         <p className="text-xs text-wine-700" role="alert">
