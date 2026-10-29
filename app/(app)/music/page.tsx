@@ -89,7 +89,7 @@ export default function MusicPage() {
           </h2>
           <p className="mt-1 text-xs text-wine-500">Stream our full worship playlist on YouTube Music</p>
         </div>
-        <YouTubePlaylistEmbed playlistId="PLEjZZqlkBhWs" title="GAM Worship &amp; Praise" height={260} />
+        <YouTubePlaylistEmbed playlistId="PLEjZZqlkBhWs" title="Glorious Assembly Ministries Playlist" height={360} />
       </section>
     </div>
   );
