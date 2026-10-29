@@ -50,8 +50,19 @@ const MIME = {
 const MAX_BYTES = 100 * 1048576;
 
 const manifest = JSON.parse(fs.readFileSync('scripts/audio-manifest.json', 'utf8'));
+// Skip short (<30 min) recordings — only long sermons should carry audio.
+let dropIds = new Set();
+if (fs.existsSync('scripts/audio-durations.json')) {
+  try {
+    const durs = JSON.parse(fs.readFileSync('scripts/audio-durations.json', 'utf8'));
+    dropIds = new Set(durs.filter((d) => !d.keep).map((d) => d.id));
+  } catch {}
+}
+const filtered = manifest.filter((e) => !dropIds.has(e.id));
+console.log(`manifest: ${manifest.length} total, ${dropIds.size} short (<30min) dropped, ${filtered.length} to process`);
+const manifestToUse = filtered;
 const SERMONISH = /SERMON|MESSAGE|MINISTRATION|PREACH|WORD/i;
-let sorted = [...manifest].sort((a, b) => {
+let sorted = [...manifestToUse].sort((a, b) => {
   const ad = a.serviceDate || '0000', bd = b.serviceDate || '0000';
   if (ad !== bd) return bd < ad ? -1 : 1;
   const as = SERMONISH.test(a.title) ? 0 : 1, bs = SERMONISH.test(b.title) ? 0 : 1;
