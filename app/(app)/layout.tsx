@@ -30,7 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <html lang="en" className="dark h-full">
       <body className="min-h-dvh bg-cream-50 text-wine-900 antialiased selection:bg-wine-500/20 pb-28">
         <ToastProvider>
-          <main className="max-w-md mx-auto min-h-dvh pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] px-4 relative z-10">
+          <main className="max-w-md mx-auto min-h-dvh pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] px-4 relative z-10">
             {children}
           </main>
           <PersistentPlayer />

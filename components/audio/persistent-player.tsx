@@ -205,7 +205,7 @@ export function PersistentPlayer() {
 
   return (
     <>
-      <div className="fixed bottom-16 left-0 right-0 z-50 max-w-md mx-auto bg-cream-100 border-t border-cream-300 p-3 shadow-sm flex items-center justify-between gap-3">
+      <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 max-w-md mx-auto bg-cream-100 border-t border-cream-300 p-3 shadow-sm flex items-center justify-between gap-3">
         <audio
           ref={audioRef}
           src={source || undefined}
