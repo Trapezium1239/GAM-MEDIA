@@ -78,6 +78,21 @@ const failures = [];
 let processed = 0;
 let aborted = null;
 
+// Persist a snapshot periodically so a killed/interrupted run still leaves an
+// accurate record (the run itself is resumable via the idempotent storage key).
+const writeProgress = () => {
+  const snapshot = {
+    ...stats,
+    processed,
+    limit: LIMIT === Infinity ? 'all' : LIMIT,
+    aborted,
+    remaining: sorted.length - processed,
+    failures: failures.slice(0, 40),
+    updatedAt: new Date().toISOString(),
+  };
+  fs.writeFileSync('scripts/upload-progress.json', JSON.stringify(snapshot, null, 2));
+};
+
 for (const e of sorted) {
   if (processed >= LIMIT) break;
   if (aborted) break;
@@ -95,6 +110,7 @@ for (const e of sorted) {
   const key = `sermons/${e.id}${e.ext}`;
   const url = publicUrlOf(key);
   processed++;
+  if (processed % 25 === 0) writeProgress();
 
   if (DRY) {
     console.log(`[dry-run] ${e.serviceDate || '????-??-??'} ${path.basename(e.file)} (${(realSize / 1048576).toFixed(1)}MB) -> ${key}`);
