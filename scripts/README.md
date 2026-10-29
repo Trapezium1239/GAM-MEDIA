@@ -14,7 +14,7 @@
 
 | Script | Purpose |
 |--------|---------|
-| `seed-mock-data.ts` | Seed music, programs, devotionals (dev) |
+| `seed-music.ts` | Seed music tracks |
 | `generate-365-devotionals.ts` | Generate 365 daily devotionals from Bible |
 | `seed-music.ts` | Seed music tracks |
 
@@ -22,7 +22,6 @@
 
 | Script | Purpose |
 |--------|---------|
-| `test-sanity.ts` | Search index sanity checks |
 | `verify-devotionals.ts` | Verify devotional data integrity |
 | `count-data.ts` | Count records in tables |
 | `check-data.ts` | General data validation |
@@ -31,7 +30,7 @@
 
 | Script | Purpose |
 |--------|---------|
-| `regenerate-search-index.ts` | Rebuild MiniSearch index from Supabase |
+| `regenerate-search-index.ts` | Rebuild `public/search-index.json` from Supabase (not consumed by the app — the vault now searches Postgres directly) |
 
 ## Bible Data
 
@@ -68,5 +67,5 @@ npx tsx scripts/regenerate-search-index.ts
 npx tsx scripts/generate-365-devotionals.ts
 
 # Verify data
-npx tsx scripts/test-sanity.ts
+npx tsx scripts/verify-devotionals.ts
 ```

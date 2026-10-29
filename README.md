@@ -13,7 +13,7 @@ A full-featured church application built with Next.js 16, Capacitor, and Supabas
 - **Mobile**: Capacitor (iOS/Android)
 - **Styling**: Tailwind CSS (Cream/Wine palette)
 - **State**: Zustand (audio), localStorage/IndexedDB (offline)
-- **Search**: MiniSearch (client) + PostgreSQL tsvector (server)
+- **Search**: client-side filtering + Postgres `ilike` via Supabase
 
 ## Quick Start
 
@@ -35,9 +35,6 @@ npm run db:reset     # Reset local DB
 
 # Type checking
 npm run typecheck
-
-# Testing
-npm run test:sanity
 ```
 
 ## Project Structure
@@ -80,8 +77,7 @@ npm run test:sanity
 ├── supabase/
 │   └── migrations/        # SQL migrations
 ├── public/
-│   ├── bible/             # Bible translations (JSON)
-│   └── search-index.json  # MiniSearch index
+│   └── bible/             # Bible translations (JSON)
 ├── android/               # Capacitor Android
 ├── ios/                   # Capacitor iOS
 └── store/                 # Zustand stores
@@ -142,7 +138,7 @@ npx cap open ios
 
 - **Audio**: IndexedDB blob cache (200MB LRU) + native filesystem
 - **Bible**: Bundled JSON translations (KJV, WEB, Igbo, Yoruba, Hausa)
-- **Search**: MiniSearch index cached in idb
+- **Search**: client-side filtering for small lists; Postgres `ilike` for the sermon vault
 - **Audio position**: localStorage with 7-day TTL
 
 ## Deployment
@@ -170,8 +166,6 @@ npx cap open ios
 | `npm run db:reset` | Reset local DB |
 | `npm run ingest:telegram` | Import Telegram sermons |
 | `npm run copy:audio` | Copy audio to R2 |
-| `npm run seed:mock-data` | Seed dev data |
-| `npm run test:sanity` | Search sanity check |
 
 ## Architecture Decisions
 
