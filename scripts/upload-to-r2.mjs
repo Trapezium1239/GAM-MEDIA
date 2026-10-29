@@ -68,7 +68,18 @@ let sorted = [...manifestToUse].sort((a, b) => {
   const as = SERMONISH.test(a.title) ? 0 : 1, bs = SERMONISH.test(b.title) ? 0 : 1;
   return as - bs;
 });
+// Skip sermons already wired to R2 (so re-runs resume instead of reprocessing).
+try {
+  const r = await fetch(`${U}/rest/v1/sermons?select=id&audio_url=like.*r2.dev*`, { headers: H });
+  const rows = await r.json();
+  if (Array.isArray(rows)) {
+    const done = new Set(rows.map((x) => x.id));
+    sorted = sorted.filter((e) => !done.has(e.id));
+    console.log(`already on R2: ${done.size}, remaining to process: ${sorted.length}`);
+  }
+} catch (e) { console.warn('could not fetch wired set:', e?.message); }
 const onlyIds = flag('ids', '').split(',').map((s) => s.trim()).filter(Boolean);
+
 if (onlyIds.length) {
   const want = new Set(onlyIds);
   sorted = sorted.filter((e) => want.has(e.id));
