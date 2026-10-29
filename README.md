@@ -165,7 +165,8 @@ npx cap open ios
 | `npm run db:push` | Push migrations to Supabase |
 | `npm run db:reset` | Reset local DB |
 | `npm run ingest:telegram` | Import Telegram sermons |
-| `npm run copy:audio` | Copy audio to R2 |
+| `npm run audio:manifest` | Match sermons to real audio files on disk |
+| `npm run audio:upload` | Upload real audio + wire `audio_url` |
 
 ## Architecture Decisions
 

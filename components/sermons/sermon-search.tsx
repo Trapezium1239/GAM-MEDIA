@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { Search, X, Filter, ChevronDown, Loader2, AlertCircle, User, Calendar } from 'lucide-react';
+import { Search, X, Filter, ChevronDown, Loader2, AlertCircle, User, Calendar, Volume2 } from 'lucide-react';
 import { PlaySermonButton } from '@/components/audio/play-button';
 import { createClient } from '@/lib/supabase/client';
 
@@ -44,11 +44,13 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('all');
+  const [audioOnly, setAudioOnly] = useState(false);
   const [results, setResults] = useState<Sermon[]>(initialSermons);
+  const [filteredTotal, setFilteredTotal] = useState<number | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const isFiltering = debouncedQuery.length > 0 || selectedTopic !== 'all';
+  const isFiltering = debouncedQuery.length > 0 || selectedTopic !== 'all' || audioOnly;
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
@@ -58,8 +60,9 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
   const runSearch = useCallback(async () => {
     const term = sanitize(debouncedQuery);
 
-    if (!term && selectedTopic === 'all') {
+    if (!term && selectedTopic === 'all' && !audioOnly) {
       setResults(initialSermons);
+      setFilteredTotal(null);
       setSearchError(null);
       setSearching(false);
       return;
@@ -71,15 +74,21 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
     const supabase = createClient();
     let request = supabase
       .from('sermons')
-      .select('id, title, preacher, date, duration, audio_url, video_link, topic_id, topics(name, slug)')
+      .select('id, title, preacher, date, duration, audio_url, video_link, topic_id, topics(name, slug)', {
+        count: 'exact',
+      })
       .order('date', { ascending: false })
       .limit(100);
 
+    // Real recordings are the only rows whose audio_url starts with http;
+    // placeholders (`audio/...`) and dead desktop paths (`local://...`) do not.
+    if (audioOnly) request = request.like('audio_url', 'http%');
     if (term) request = request.or(`title.ilike.%${term}%,preacher.ilike.%${term}%`);
     if (selectedTopic !== 'all') request = request.eq('topic_id', selectedTopic);
 
-    const { data, error } = await request;
+    const { data, error, count } = await request;
 
+    setFilteredTotal(count ?? null);
     if (error) {
       setSearchError(error.message);
       setResults([]);
@@ -87,7 +96,7 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
       setResults((data ?? []) as unknown as Sermon[]);
     }
     setSearching(false);
-  }, [debouncedQuery, selectedTopic, initialSermons]);
+  }, [debouncedQuery, selectedTopic, audioOnly, initialSermons]);
 
   useEffect(() => {
     void runSearch();
@@ -97,12 +106,24 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
     setQuery('');
     setDebouncedQuery('');
     setSelectedTopic('all');
+    setAudioOnly(false);
   };
 
-  const countLabel = useMemo(
-    () => (isFiltering ? `${results.length} result${results.length === 1 ? '' : 's'}` : `${totalSermons} sermons`),
-    [isFiltering, results.length, totalSermons]
+  /** True when at least one sermon in the initially-loaded window is playable. */
+  const initialHasAudio = useMemo(
+    () => initialSermons.some((s) => (s.audio_url || '').startsWith('http')),
+    [initialSermons]
   );
+
+  const countLabel = useMemo(() => {
+    if (!isFiltering) return `${totalSermons} sermons`;
+    const shown = filteredTotal ?? results.length;
+    if (audioOnly && !debouncedQuery && selectedTopic === 'all') {
+      const hidden = shown - results.length;
+      return `${shown} sermons with audio${hidden > 0 ? ` · showing ${results.length}` : ''}`;
+    }
+    return `${shown} result${shown === 1 ? '' : 's'}`;
+  }, [isFiltering, audioOnly, debouncedQuery, selectedTopic, filteredTotal, results.length, totalSermons]);
 
   return (
     <div className="space-y-4">
@@ -136,6 +157,22 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
             aria-hidden="true"
           />
         )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setAudioOnly((v) => !v)}
+          aria-pressed={audioOnly}
+          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition ${
+            audioOnly
+              ? 'border-wine-600 bg-wine-600 text-cream-50'
+              : 'border-cream-300 bg-cream-100 text-wine-600 hover:border-wine-400 hover:text-wine-800'
+          }`}
+        >
+          <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
+          With audio
+        </button>
       </div>
 
       {topics.length > 0 && (
@@ -172,6 +209,22 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
           </button>
         )}
       </div>
+
+      {!isFiltering && !initialHasAudio && (
+        <div className="flex items-start gap-2 rounded-xl border border-cream-300 bg-cream-100 px-3 py-2.5 text-xs text-wine-600">
+          <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-wine-400" aria-hidden="true" />
+          <span>
+            The newest sermons have no uploaded recording yet.{' '}
+            <button
+              type="button"
+              onClick={() => setAudioOnly(true)}
+              className="font-semibold text-wine-800 underline hover:text-wine-900"
+            >
+              Show sermons with audio
+            </button>
+          </span>
+        </div>
+      )}
 
       {searchError && (
         <div className="flex items-start gap-2 rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-600" role="alert">
@@ -232,9 +285,17 @@ export function SermonSearch({ initialSermons, topics, totalSermons }: SermonSea
         !searching && (
           <div className="empty-state py-12">
             <Search className="empty-state-icon text-wine-300" aria-hidden="true" />
-            <p className="empty-state-title">No sermons found</p>
+            <p className="empty-state-title">
+              {audioOnly && !debouncedQuery && selectedTopic === 'all'
+                ? 'No recordings available yet'
+                : 'No sermons found'}
+            </p>
             <p className="empty-state-desc">
-              {debouncedQuery ? `No results for "${debouncedQuery}"` : 'Try a different topic'}
+              {audioOnly && !debouncedQuery && selectedTopic === 'all'
+                ? 'Audio has not been uploaded for this selection.'
+                : debouncedQuery
+                  ? `No results for "${debouncedQuery}"`
+                  : 'Try a different topic'}
             </p>
           </div>
         )

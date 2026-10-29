@@ -18,7 +18,8 @@
     "db:reset": "supabase db reset",
     "prepare": "husky install",
     "ingest:telegram": "tsx scripts/ingest-telegram.ts",
-    "copy:audio": "tsx scripts/copy-audio-local.ts",
+    "audio:manifest": "node scripts/build-audio-manifest.mjs",
+    "audio:upload": "node scripts/upload-real-audio.mjs",
     "setup:r2": "tsx scripts/setup-r2-cors.ts"
   },
   "dependencies": {

@@ -40,10 +40,18 @@
 
 ## Audio
 
+The proven pipeline (real files → Supabase Storage → DB rows):
+
 | Script | Purpose |
 |--------|---------|
-| `upload-audio.ts` | Upload audio files to R2 |
-| `copy-audio-local.ts` | Copy local audio to R2 |
+| `build-audio-manifest.mjs` | Match DB sermons to real files on disk → `audio-manifest.json` (re-verifies each file's byte size) |
+| `upload-real-audio.mjs` | Upload manifest entries to `church-media`, SHA-256-verify, wire `audio_url` (idempotent: key is `sermons/<id><ext>`) |
+
+```bash
+npm run audio:manifest
+npm run audio:upload -- --limit 25 --verify 3   # batch + byte verification
+npm run audio:upload -- --dry-run --limit 10    # preview without uploading
+```
 
 ## Supabase
 
