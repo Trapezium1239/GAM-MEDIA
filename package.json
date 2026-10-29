@@ -19,8 +19,7 @@
     "prepare": "husky install",
     "ingest:telegram": "tsx scripts/ingest-telegram.ts",
     "copy:audio": "tsx scripts/copy-audio-local.ts",
-    "setup:r2": "tsx scripts/setup-r2-cors.ts",
-    "test:sanity": "tsx scripts/test-sanity.ts"
+    "setup:r2": "tsx scripts/setup-r2-cors.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1149.0",
