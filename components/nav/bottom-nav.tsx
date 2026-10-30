@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, BookOpen, BookMarked, Heart, MoreHorizontal, Music, Calendar, BookOpen as DailyIcon, User, X } from 'lucide-react'
+import { Home, BookOpen, BookMarked, Heart, MoreHorizontal, Music, Calendar, BookOpen as DailyIcon, User, X, Headphones } from 'lucide-react'
 import { triggerHaptic } from '@/lib/native/haptics'
 
 const primaryItems = [
@@ -15,6 +15,7 @@ const primaryItems = [
 
 const moreItems = [
   { href: '/music', label: 'Music', icon: Music },
+  { href: '/yoruba-bible', label: 'Yoruba Bible', icon: Headphones },
   { href: '/programs', label: 'Events', icon: Calendar },
   { href: '/devotional', label: 'Daily', icon: DailyIcon },
   { href: '/profile', label: 'Profile', icon: User },
