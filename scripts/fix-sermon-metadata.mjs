@@ -38,20 +38,35 @@ const MONTHS = 'JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTO
 const MONTH_ABBR = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
 function titleDate(title) {
-  const u = (title || '').toUpperCase();
-  let m = u.match(/(\d{1,2})\s*(?:ST|ND|RD|TH)?\s+([A-Z]{3,9})[A-Z]*\s*,?\s*(20\d\d)/);
+  // Normalise classic OCR/typing slips: "2O21" -> "2021", "2O24" -> "2024".
+  const u = (title || '').toUpperCase().replace(/(\d)O(\d)/g, (_, a, b) => `${a}0${b}`);
+  let m = u.match(/(\d{1,2})\s*(?:ST|ND|RD|TH)?\s+(?:OF\s+)?([A-Z]{3,9})[A-Z]*\s*,?\s*([0-9]{4})/);
   if (m) {
+    let year = Number(m[3]);
+    // "2921"/"2924" are keying slips for 2021/2024 (9 vs 0 on a keypad).
+    if (year >= 2900 && year <= 2930) year -= 900;
+    if (year < 2000 || year > 2030) return null;
+    const y = String(year);
     const i = MONTHS.indexOf(m[2]);
-    if (i >= 0) return `${m[3]}-${String(i + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+    if (i >= 0) return `${y}-${String(i + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
     const j = MONTH_ABBR.indexOf(m[2].slice(0, 3));
-    if (j >= 0 && m[2].length <= 4) return `${m[3]}-${String(j + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+    if (j >= 0 && m[2].length <= 4) return `${y}-${String(j + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
     return null;
   }
-  // "19TH SEPT 2021", "2O21" typos, "2024-02-20", "20 feb 2024"
-  m = u.match(/(\d{1,2})[-\/ ](JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[-\/ ](20\d\d)/);
-  if (m) return `${m[3]}-${String(MONTH_ABBR.indexOf(m[2]) + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
-  m = u.match(/(20\d\d)[-\/ ](\d{1,2})[-\/ ](\d{1,2})/);
-  if (m) return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+  // "19TH SEPT 2021", "2024-02-20", "20 feb 2024"
+  m = u.match(/(\d{1,2})[-\/ ](JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[-\/ ]([0-9]{4})/);
+  if (m) {
+    let year = Number(m[3]);
+    if (year >= 2900 && year <= 2930) year -= 900;
+    if (year < 2000 || year > 2030) return null;
+    return `${year}-${String(MONTH_ABBR.indexOf(m[2]) + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+  }
+  m = u.match(/([0-9]{4})[-\/ ](\d{1,2})[-\/ ](\d{1,2})/);
+  if (m) {
+    const year = Number(m[1]);
+    if (year < 2000 || year > 2030) return null;
+    return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+  }
   return null;
 }
 

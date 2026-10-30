@@ -40,17 +40,21 @@
 
 ## Audio
 
-The proven pipeline (real files → Supabase Storage → DB rows):
+The proven pipeline (real files on disk → R2 / Supabase Storage → DB rows):
 
 | Script | Purpose |
 |--------|---------|
 | `build-audio-manifest.mjs` | Match DB sermons to real files on disk → `audio-manifest.json` (re-verifies each file's byte size) |
-| `upload-real-audio.mjs` | Upload manifest entries to `church-media`, SHA-256-verify, wire `audio_url` (idempotent: key is `sermons/<id><ext>`) |
+| `upload-to-r2.mjs` | Upload manifest entries (≥30 min only, via `audio-durations.json`) to Cloudflare R2, SHA-256-verify, wire `audio_url` (idempotent: key is `sermons/<id><ext>`) |
+| `upload-real-audio.mjs` | Same for the Supabase Storage bucket `church-media` (fallback / partial coverage) |
+| `verify-audio.mjs` | Independent proof: HEAD every advertised URL and fail if any does not serve real bytes |
+| `fix-sermon-metadata.mjs` | Repair import-stamped dates and propagate real URLs to duplicate rows |
 
 ```bash
 npm run audio:manifest
-npm run audio:upload -- --limit 25 --verify 3   # batch + byte verification
-npm run audio:upload -- --dry-run --limit 10    # preview without uploading
+npm run audio:r2 -- --limit 25 --verify 3   # batch + byte verification
+npm run audio:r2 -- --dry-run --limit 10    # preview without uploading
+npm run audio:verify                        # exit 1 if any wired URL is dead
 ```
 
 ## Supabase

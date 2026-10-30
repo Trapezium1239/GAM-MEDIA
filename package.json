@@ -20,6 +20,8 @@
     "ingest:telegram": "tsx scripts/ingest-telegram.ts",
     "audio:manifest": "node scripts/build-audio-manifest.mjs",
     "audio:upload": "node scripts/upload-real-audio.mjs",
+    "audio:r2": "node scripts/upload-to-r2.mjs",
+    "audio:verify": "node scripts/verify-audio.mjs",
     "setup:r2": "tsx scripts/setup-r2-cors.ts"
   },
   "dependencies": {
