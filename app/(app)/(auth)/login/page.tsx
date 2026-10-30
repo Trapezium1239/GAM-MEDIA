@@ -9,6 +9,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [password, setPassword] = useState('');
+  const [staffMode, setStaffMode] = useState(false);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,6 +105,10 @@ export default function LoginPage() {
         )}
 
         <p className="text-center text-[11px] text-wine-500 leading-relaxed">
+        <p className="text-center text-[11px] text-wine-500">
+          Staff? <a href="/admin-login" className="underline font-semibold text-wine-700">Sign in with password</a>
+        </p>
+
           New members: your profile is created automatically after your first sign-in.
         </p>
       </div>

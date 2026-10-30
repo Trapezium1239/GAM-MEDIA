@@ -19,11 +19,16 @@ const adminLinks = [
 ];
 
 export default function AdminOverviewPage() {
+  const [role, setRole] = useState<string | null>(null);
   const [stats, setStats] = useState<{ label: string; value: number }[] | null>(null);
+
+
 
   useEffect(() => {
     let cancelled = false;
     const supabase = createClient();
+
+
     (async () => {
       try {
         const [sermonsCount, programsCount, galleryCount, musicCount, activeAlerts] = await Promise.all([
@@ -55,6 +60,17 @@ export default function AdminOverviewPage() {
       cancelled = true;
     };
   }, []);
+  useEffect(() => {
+    const supabase = createClient();
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+        setRole(profile?.role ?? null);
+      }
+    })();
+  }, []);
+
 
   if (stats === null) {
     return (
@@ -82,7 +98,10 @@ export default function AdminOverviewPage() {
       </div>
 
       <nav className="space-y-2" aria-label="Admin sections">
-        {adminLinks.map((link) => {
+        {(role === 'media'
+          ? adminLinks.filter((l) => ['/admin/music', '/admin/sermons', '/admin/gallery'].includes(l.href))
+          : adminLinks
+        ).map((link) => {
           const Icon = link.icon;
           return (
             <Link
