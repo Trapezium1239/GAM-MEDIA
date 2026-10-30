@@ -39,11 +39,17 @@ for (const f of files) {
 entries.sort((a,b) => a.bookIndex - b.bookIndex || a.chapter - b.chapter);
 console.log('Parsed entries:', entries.length);
 
-// Group by book for manifest
+// Group by book for manifest (ensure all 66 books exist)
 const booksMap = new Map();
+for (let i = 0; i < BOOKS.length; i++) {
+  booksMap.set(i, { index: i, name: BOOKS[i], yorubaName: '', chapters: [] });
+}
 for (const e of entries) {
   if (!booksMap.has(e.bookIndex)) booksMap.set(e.bookIndex, { index: e.bookIndex, name: e.bookName, yorubaName: e.yorubaName, chapters: [] });
-  booksMap.get(e.bookIndex).chapters.push({ chapter: e.chapter, url: e.url });
+  const b = booksMap.get(e.bookIndex);
+  b.name = e.bookName;
+  b.yorubaName = e.yorubaName;
+  b.chapters.push({ chapter: e.chapter, url: e.url });
 }
 const manifest = {
   language: 'yoruba',
