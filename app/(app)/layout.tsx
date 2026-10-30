@@ -27,8 +27,15 @@ export const viewport: Viewport = {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark h-full">
-      <body className="min-h-dvh bg-cream-50 text-wine-900 antialiased selection:bg-wine-500/20 pb-28">
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-dvh bg-cream-50 text-wine-900 antialiased selection:bg-wine-500/20 pb-28 dark:bg-wine-950 dark:text-cream-100">
         <ToastProvider>
           <main className="max-w-md mx-auto min-h-dvh pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] px-4 relative z-10">
             {children}

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { LogOut, User, Users, Shield, ChevronRight, FileText, Loader2, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 interface ProfileRow {
   full_name: string | null;
@@ -211,6 +212,11 @@ return (
           <ChevronRight className="w-4 h-4 text-zinc-600" aria-hidden="true" />
         </Link>
       </nav>
+
+      <div className="space-y-2">
+        <p className="text-xs uppercase tracking-wider text-zinc-500">Appearance</p>
+        <ThemeToggle />
+      </div>
 
       <button
         type="button"
