@@ -47,7 +47,7 @@ const MIME = {
   '.m4a': 'audio/mp4', '.mp4': 'audio/mp4', '.wav': 'audio/wav', '.aac': 'audio/aac',
   '.amr': 'audio/amr', '.webm': 'audio/webm',
 };
-const MAX_BYTES = 100 * 1048576;
+const MAX_BYTES = 512 * 1048576; // R2 allows far larger; guard against runaway files
 
 const manifest = JSON.parse(fs.readFileSync('scripts/audio-manifest.json', 'utf8'));
 // Skip short (<30 min) recordings — only long sermons should carry audio.

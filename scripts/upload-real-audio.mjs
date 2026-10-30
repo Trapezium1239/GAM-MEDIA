@@ -173,8 +173,8 @@ for (const e of sorted) {
   }
 }
 
+writeProgress();
 const summary = { ...stats, processed, limit: LIMIT === Infinity ? 'all' : LIMIT, aborted, remaining: sorted.length - processed, failures: failures.slice(0, 40) };
 console.log('\n=== SUMMARY ===');
 console.log(JSON.stringify({ ...summary, failures: `${failures.length} (showing ${summary.failures.length})` }, null, 2));
-fs.writeFileSync('scripts/upload-progress.json', JSON.stringify(summary, null, 2));
 if (aborted) console.error(`\nABORTED: ${aborted}`);
