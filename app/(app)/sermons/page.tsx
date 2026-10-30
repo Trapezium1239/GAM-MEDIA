@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { BookOpen, Loader2, AlertCircle } from 'lucide-react';
 import { SermonSearch, type Sermon, type Topic } from '@/components/sermons/sermon-search';
+import { SermonListSkeleton } from '@/components/ui/skeleton';
 
 /** Enough for an instant first screen without shipping thousands of rows. */
 const INITIAL_PAGE_SIZE = 200;
@@ -51,9 +52,15 @@ export default function SermonsPage() {
 
   if (sermons === null) {
     return (
-      <div className="empty-state">
-        <Loader2 className="empty-state-icon animate-spin" aria-hidden="true" />
-        <p className="empty-state-title">Loading sermons...</p>
+      <div className="space-y-6 py-4 pb-32">
+        <header>
+          <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-wine-600" aria-hidden="true" />
+            Word Vault
+          </h1>
+          <p className="text-xs text-wine-500 mt-1">Sermons, teachings, and series</p>
+        </header>
+        <SermonListSkeleton count={6} />
       </div>
     );
   }

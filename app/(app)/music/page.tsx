@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAudioStore } from '@/store/use-audio-store';
 import { UnifiedSearch } from '@/components/search/unified-search';
 import { YouTubePlaylistEmbed } from '@/components/youtube/youtube-playlist-embed';
+import { MusicListSkeleton } from '@/components/ui/skeleton';
 import { isPlayableAudio } from '@/lib/audio-url';
 
 interface MusicTrack {
@@ -55,9 +56,15 @@ export default function MusicPage() {
 
   if (loading) {
     return (
-      <div className="empty-state">
-        <Music className="empty-state-icon" aria-hidden="true" />
-        <p className="empty-state-title">Loading music...</p>
+      <div className="space-y-6 py-4 pb-32">
+        <header>
+          <h1 className="text-2xl font-bold text-wine-900 flex items-center gap-2">
+            <Music className="w-6 h-6 text-wine-600" aria-hidden="true" />
+            Church Music
+          </h1>
+          <p className="text-xs text-wine-500 mt-1">Productions from our choir and worship teams</p>
+        </header>
+        <MusicListSkeleton count={6} />
       </div>
     );
   }
